@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Event } from '../types';
 import { getEventById } from '../services/dal';
 import { formatEventStart } from '../utils/eventUtils';
+import { downloadIcs, buildGoogleCalendarUrl } from '../utils/calendarUtils';
 import { FacebookLinkButton } from '../components/FacebookLinkButton';
 
 export function EventPage() {
@@ -21,6 +22,23 @@ export function EventPage() {
     };
     getEventFromDal(); // async
   }, [id]);
+
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const addMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // close the menu when clicking outside
+  useEffect(() => {
+    if (!showAddMenu) return;
+
+    const onClick = (e: MouseEvent) => {
+      if (!addMenuRef.current?.contains(e.target as Node)) {
+        setShowAddMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [showAddMenu]);
 
   const handleBack = () => { // when back button clicked...
     navigate('/'); // ...go back to main events list
@@ -43,9 +61,42 @@ export function EventPage() {
             Back to events
           </button>
 
-          {/* Facebook link + Theme toggle */}
-          <FacebookLinkButton event={event} />
-          
+          <div className="flex items-center gap-2 relative">
+            <button
+              onClick={() => setShowAddMenu(v => !v)}
+              className="bg-[var(--link-primary)] hover:bg-[var(--link-primary-hover)] text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition"
+            >
+              Add to calendar
+            </button>
+
+            {showAddMenu && (
+              <div
+                ref={addMenuRef}
+                className="absolute right-0 mt-2 w-44 bg-[var(--panel-bg)] border border-[var(--panel-border)] rounded-lg shadow-xl z-50"
+              >
+                <button
+                  onClick={() => {
+                    window.open(buildGoogleCalendarUrl(event), '_blank');
+                    setShowAddMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-[var(--input-bg)] transition"
+                >
+                  Google Calendar
+                </button>
+                <button
+                  onClick={() => {
+                    downloadIcs(event);
+                    setShowAddMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-[var(--input-bg)] transition"
+                >
+                  Apple / .ics
+                </button>
+              </div>
+            )}
+
+            <FacebookLinkButton event={event} />
+          </div>
         </div>
       </header>
 

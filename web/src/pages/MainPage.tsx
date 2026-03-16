@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'; // React imports
 import { FilterBar } from '../components/FilterBar';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { EventList } from '../components/EventList';
+import { CalendarView } from '../components/Calendar';
 import { Footer } from '../components/Footer';
 import { getEvents, getPages } from '../services/dal';
 import { buildFacebookLoginUrl } from '../services/facebook';
@@ -86,6 +87,7 @@ export function MainPage() { // function for main page (can be used in other fil
   };
 
   const [sortMode, setSortMode] = useState<'newest' | 'upcoming' | 'all'>('upcoming'); // 'upcoming' = all (default)
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   // build final list with sortMode
   let list = [...dateFiltered];
@@ -152,16 +154,50 @@ export function MainPage() { // function for main page (can be used in other fil
         <p className="text-xs text-[var(--dtu-accent)] mb-2 font-semibold">End date is before start date. Showing results up to any end date.</p>
       )} {/* if date range is invalid then show warning message */}
 
-        <EventList list={list} /> {/* the final list of events shown after all filters have been applied */}
-        <div className="flex justify-center">
-          <a
-            href={buildFacebookLoginUrl()}
-            className="bg-[var(--link-primary)] hover:bg-[var(--link-primary-hover)] text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+      {/* view mode toggle (list vs calendar) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+        <div className="text-sm text-[var(--text-subtle)]">{count} event{count === 1 ? '' : 's'} found</div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${
+              viewMode === 'list'
+                ? 'bg-[var(--link-primary)] text-white border-transparent'
+                : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
+            }`}
           >
-            Connect Facebook Page
-          </a>
+            List
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('calendar')}
+            className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${
+              viewMode === 'calendar'
+                ? 'bg-[var(--link-primary)] text-white border-transparent'
+                : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
+            }`}
+          >
+            Calendar
+          </button>
         </div>
-        </div>
+      </div>
+
+      {viewMode === 'list' ? (
+        <EventList list={list} /> /* the final list of events shown after all filters have been applied */
+      ) : (
+        <CalendarView events={list} />
+      )}
+
+      <div className="flex justify-center">
+        <a
+          href={buildFacebookLoginUrl()}
+          className="bg-[var(--link-primary)] hover:bg-[var(--link-primary-hover)] text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+        >
+          Connect Facebook Page
+        </a>
+      </div>
+    </div>
       </div>
       <Footer />
     </div>
