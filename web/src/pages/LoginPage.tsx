@@ -63,10 +63,10 @@ export function LoginPage() {
                                         Sign In
                                     </button>
 
-                                    <button type="button" className="login-btn login-btn-secondary">
+                                    <Link to="/signup" className="login-btn login-btn-secondary">
                                         <UserPlus size={18} />
                                         Sign Up
-                                    </button>
+                                    </Link>
 
                                     <button type="button" className="login-btn login-btn-facebook">
                                         <Facebook size={22} strokeWidth={2.35} />
