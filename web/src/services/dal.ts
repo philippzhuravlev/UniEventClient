@@ -1,85 +1,19 @@
 import type { Event, Page } from '../types';
 import { events as mockEvents, pages as mockPages } from '../data/mock';
 
-// Data Access Layer (client-side). Today: returns mock data asynchronously.
-// Later: swap implementation to call Firestore / API.
-
-const useFirestore = (String((import.meta as any).env?.VITE_USE_FIRESTORE || '')).toLowerCase() === 'true';
+// Data Access Layer (client-side): local mock data only.
 
 export async function getPages(): Promise<Page[]> {
-  if (!useFirestore) {
-    await new Promise(r => setTimeout(r, 100));
-    return mockPages;
-  }
-  const { db } = await import('./firebase');
-  const { collection, getDocs } = await import('firebase/firestore');
-  const snap = await getDocs(collection(db, 'pages'));
-  return snap.docs.map(d => {
-    const data = d.data() as any;
-    return {
-      id: d.id,
-      name: data.name,
-      url: data.url,
-      active: !!data.active,
-    } satisfies Page;
-  });
-}
-
-function toIso(value: any | undefined): string | undefined {
-  if (!value) return undefined;
-  return typeof value.toDate === 'function' ? value.toDate().toISOString() : value;
+  await new Promise(r => setTimeout(r, 100));
+  return mockPages;
 }
 
 export async function getEvents(): Promise<Event[]> {
-  if (!useFirestore) {
-    await new Promise(r => setTimeout(r, 150));
-    return mockEvents;
-  }
-  const { db } = await import('./firebase');
-  const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
-  const q = query(collection(db, 'events'), orderBy('startTime'));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => {
-    const data = d.data() as any;
-    return {
-      id: d.id,
-      pageId: data.pageId,
-      title: data.title,
-      description: data.description,
-      startTime: toIso(data.startTime) as string,
-      endTime: toIso(data.endTime),
-      place: data.place,
-      coverImageUrl: data.coverImageUrl,
-      eventURL: data.eventURL,
-      createdAt: toIso(data.createdAt) as string,
-      updatedAt: toIso(data.updatedAt) as string,
-    } satisfies Event;
-  });
+  await new Promise(r => setTimeout(r, 150));
+  return mockEvents;
 }
 
 export async function getEventById(id: string): Promise<Event | null> {
-  // pull from firebase
-  const { db } = await import('./firebase'); // actual db instance
-  const { doc, getDoc } = await import('firebase/firestore'); // document
-  const snap = await getDoc(doc(db, 'events', id)); // snapshot of document
-  if (!snap.exists()) { // if document does not exist
-    return null;
-  }
-  const data = snap.data() as any; // get data from snapshot
-  
-  // Type checking
-  // map data onto Event (which is an object from types.ts)
-  return {
-    id: snap.id,
-    pageId: data.pageId,
-    title: data.title,
-    description: data.description,
-    startTime: toIso(data.startTime) as string,
-    endTime: toIso(data.endTime),
-    place: data.place,
-    coverImageUrl: data.coverImageUrl,
-    eventURL: data.eventURL,
-    createdAt: toIso(data.createdAt) as string,
-    updatedAt: toIso(data.updatedAt) as string,
-  } satisfies Event; // "satisfies" = typescript keyword that checks if object matches type
+  await new Promise(r => setTimeout(r, 50));
+  return mockEvents.find(event => event.id === id) ?? null;
 }

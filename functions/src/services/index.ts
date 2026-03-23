@@ -2,6 +2,6 @@
 // for easier imports elsewhere
 
 export * from './FacebookService';
-export * from './FirestoreService';
+export * from './DataStoreService';
 export * from './SecretManagerService';
 export * from './StorageService';

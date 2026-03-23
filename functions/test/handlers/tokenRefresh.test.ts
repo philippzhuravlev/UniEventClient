@@ -7,11 +7,11 @@ describe('handleRefreshTokens (basic)', () => {
   beforeEach(() => {
     deps = {
       facebookService: {
-        refreshLongLivedToken: vi.fn(),
+        refreshPageToken: vi.fn(),
         getPagesFromUser: vi.fn(),
       },
       secretManagerService: { getPageToken: vi.fn(), addPageToken: vi.fn() },
-      firestoreService: {
+      dataStoreService: {
         getPages: vi.fn(),
         updatePage: vi.fn(),
       },
@@ -20,20 +20,20 @@ describe('handleRefreshTokens (basic)', () => {
   });
 
   it('does nothing if no pages', async () => {
-    deps.firestoreService.getPages.mockResolvedValue([]);
+    deps.dataStoreService.getPages.mockResolvedValue([]);
     await handleRefreshTokens(deps);
-    expect(deps.facebookService.refreshLongLivedToken).not.toHaveBeenCalled();
-    expect(deps.firestoreService.updatePage).not.toHaveBeenCalled();
+    expect(deps.facebookService.refreshPageToken).not.toHaveBeenCalled();
+    expect(deps.dataStoreService.updatePage).not.toHaveBeenCalled();
   });
 
   it('calls updatePage with failure on error', async () => {
     const oldDate = new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString();
-    deps.firestoreService.getPages.mockResolvedValue([
+    deps.dataStoreService.getPages.mockResolvedValue([
       { id: 'page1', tokenRefreshedAt: oldDate }
     ]);
     deps.secretManagerService.getPageToken.mockResolvedValue('token');
-    deps.facebookService.refreshLongLivedToken.mockRejectedValue(new Error('fail'));
+    deps.facebookService.refreshPageToken.mockRejectedValue(new Error('fail'));
     await handleRefreshTokens(deps);
-    expect(deps.firestoreService.updatePage).toHaveBeenCalledWith('page1', expect.objectContaining({ lastRefreshSuccess: false }));
+    expect(deps.dataStoreService.updatePage).toHaveBeenCalledWith('page1', expect.objectContaining({ lastRefreshSuccess: false }));
   });
 });

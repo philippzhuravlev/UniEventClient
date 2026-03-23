@@ -109,10 +109,10 @@ export function MainPage() { // function for main page (can be used in other fil
     <div className="min-h-screen flex flex-col">
       <header className="page-header mx-6 md:mx-8 mt-4 md:mt-6 mb-6">
         <div className="header-content">
-          <img 
-            src="https://firebasestorage.googleapis.com/v0/b/dtuevent-8105b.firebasestorage.app/o/picture%2Fdtulogo.png?alt=media&token=7e86de6e-f1f4-471d-8354-70ad70bafe14" 
-            alt="DTU Logo" 
-            className="header-logo" 
+          <img
+            src="/dtuevent-logo.png"
+            alt="DTU Logo"
+            className="header-logo"
           />
           <div className="header-text">
             <h1 className="header-title">DTU Events</h1>

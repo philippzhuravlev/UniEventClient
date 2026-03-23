@@ -1,13 +1,12 @@
-import { firestore } from 'firebase-admin';
 import type { Dependencies } from '../utils';
 
 export async function handleRefreshTokens(deps: Dependencies): Promise<void> {
-  const { facebookService, secretManagerService, storageService, firestoreService } = deps;
+  const { facebookService, secretManagerService, storageService, dataStoreService } = deps;
 
   const startTime = Date.now();
 
-  // 1. get pages from Firestore
-  const pages = await firestoreService.getPages();
+  // 1. get pages from datastore
+  const pages = await dataStoreService.getPages();
   if (!pages || pages.length === 0) {
     return;
   }
@@ -29,9 +28,9 @@ export async function handleRefreshTokens(deps: Dependencies): Promise<void> {
       // 4. store new page token in Secret Manager
       await secretManagerService.updatePageToken(page.id, refreshedToken.accessToken, refreshedToken.expiresIn || 5184000);
 
-      // 5. update Firestore page metadata
-      await firestoreService.updatePage(page.id, {
-        tokenRefreshedAt: firestore.FieldValue.serverTimestamp(),
+      // 5. update page metadata
+      await dataStoreService.updatePage(page.id, {
+        tokenRefreshedAt: new Date().toISOString(),
         lastRefreshSuccess: true,
         lastRefreshError: null,
       });
@@ -41,10 +40,10 @@ export async function handleRefreshTokens(deps: Dependencies): Promise<void> {
       const errorMsg = err?.message || String(err);
 
       try {
-        await firestoreService.updatePage(page.id, {
+        await dataStoreService.updatePage(page.id, {
           lastRefreshSuccess: false,
           lastRefreshError: errorMsg,
-          lastRefreshAttempt: firestore.FieldValue.serverTimestamp(),
+          lastRefreshAttempt: new Date().toISOString(),
         });
       } catch (dbErr: any) {
         // silently fail

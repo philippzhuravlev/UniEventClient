@@ -35,13 +35,7 @@ coverage/
 *.local
 .runtimeconfig.json
 
-# Firebase & emulator artifacts
-.firebase/
-firebase-debug.log
-firestore-debug.log
-firebase-export-* 
-firebase/exports/
-*firebase-adminsdk*.json
+# Local/cloud secret artifacts
 *serviceAccount*.json
 *.serviceAccount.json
 
@@ -61,5 +55,5 @@ pids
 *.seed
 *.pid.lock
 
-# Compiled Firebase Functions output
+# Compiled backend output
 functions/lib/

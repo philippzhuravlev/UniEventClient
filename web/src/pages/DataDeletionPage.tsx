@@ -73,7 +73,7 @@ export function DataDeletionPage() {
         <h2 className="text-2xl font-bold mt-8 mb-4">Deletion timeline</h2>
         <p>
           After revocation or a verified deletion request, we delete the Page access token (Google Cloud Secret
-          Manager) and the associated Page/event data (Firestore) within <strong>24 hours</strong>.
+          Manager) and the associated Page/event data in our datastore within <strong>24 hours</strong>.
         </p>
 
         <h2 className="text-2xl font-bold mt-8 mb-4">Related policies</h2>

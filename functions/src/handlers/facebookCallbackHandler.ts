@@ -1,6 +1,5 @@
 import { HttpStatusUtil } from '../utils';
 import { Request, Response } from 'express'; // just the express res/req types, not Express
-import { firestore } from 'firebase-admin';
 import type { Dependencies } from '../utils';
 
 // callback = sent back from Facebook after user authorizes app with a "code" in the URL.
@@ -12,7 +11,7 @@ import type { Dependencies } from '../utils';
 
 export async function handleCallback(deps: Dependencies, req: Request, res: Response) {
   // we convert deps into individual consts ("destructuring") for ez access
-  const { facebookService, secretManagerService, storageService, firestoreService } = deps;
+  const { facebookService, secretManagerService, storageService, dataStoreService } = deps;
 
   // 1. get code from HTTP request
   const code = String(req.query.code || '').trim();
@@ -41,19 +40,20 @@ export async function handleCallback(deps: Dependencies, req: Request, res: Resp
           await secretManagerService.addPageToken(page.id, page.accessToken, longLivedToken.expiresIn);
           console.log(`[CALLBACK] Token stored successfully for page ${page.id}`);
    
-          // 6. store page "metadata"/info in Firestore
+          // 6. store page metadata in local datastore
           const expiresInSeconds = longLivedToken.expiresIn || 5184000; // default to 60 days
           const tokenExpiresAtIso = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
           const tokenExpiresInDays = Math.ceil(expiresInSeconds / (60 * 60 * 24));
+          const nowIso = new Date().toISOString();
           console.log(`[CALLBACK] Storing page metadata for ${page.id}...`);
-          await firestoreService.addPage(page.id, {
+          await dataStoreService.addPage(page.id, {
             id: page.id,
             name: page.name,
             active: true,
             url: `https://facebook.com/${page.id}`,
-            connectedAt: new Date().toISOString(),
-            tokenRefreshedAt: firestore.FieldValue.serverTimestamp(),
-            tokenStoredAt: firestore.FieldValue.serverTimestamp(),
+            connectedAt: nowIso,
+            tokenRefreshedAt: nowIso,
+            tokenStoredAt: nowIso,
             tokenExpiresAt: tokenExpiresAtIso,
             tokenExpiresInDays,
             tokenStatus: 'valid',

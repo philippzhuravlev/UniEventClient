@@ -2,7 +2,7 @@
 
 This document is the **non-technical** part of DTU Event documentation, for general users. For developer and contributor documentation, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-This website will be a central registry for Technical University of Denmark (DTU)'s campus events from bars and cafes. JS/Node.js/REACT/Tailwind frontend, Firestore backend for hosting and DB. The site pulls through facebook's API from a number of DTU Campus bars and nearby form bars. Note that we do not discriminate between Lyngby Campus and Ballerup Campus.
+This website is a central registry for Technical University of Denmark (DTU) campus events from bars and cafes. It uses a React frontend plus a Node.js backend, and stores synced event/page data in a local datastore. The site pulls event data from Facebook's API for DTU campus bars and nearby dorm bars. Note that we do not discriminate between Lyngby Campus and Ballerup Campus.
 
 ## Problem
 
@@ -46,11 +46,11 @@ Or "TonkaProductions". Note that all contribute code.
 1. Added "types" in web/src/types.ts to "mold" our data when we get it from our DB
 2. Generated mock data
 3. Created first draft of main page
-4. Added firebase integration
+4. Added backend data sync integration
 5. Added structured README + CONTRIBUTING guide
-6. Put firebase config in /firebase directory
+6. Added local backend configuration and scripts
 7. Added Facebook ingestion script
-8. Added token to Firestore
+8. Added page token persistence and metadata storage
 
 ## Planned Features
 

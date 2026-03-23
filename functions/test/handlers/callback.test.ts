@@ -22,7 +22,7 @@ describe('handleCallback', () => {
         getPagesFromUser: vi.fn(),
       },
       secretManagerService: { addPageToken: vi.fn() },
-      firestoreService: { addPage: vi.fn() },
+      dataStoreService: { addPage: vi.fn() },
       storageService: {},
     };
     res = mockRes();
@@ -55,7 +55,7 @@ describe('handleCallback', () => {
     ]);
     await handleCallback(deps, req, res);
     expect(deps.secretManagerService.addPageToken).toHaveBeenCalledTimes(2);
-    expect(deps.firestoreService.addPage).toHaveBeenCalledTimes(2);
+    expect(deps.dataStoreService.addPage).toHaveBeenCalledTimes(2);
     expect(res.send).toHaveBeenCalledWith(expect.stringContaining('Stored'));
   });
 });

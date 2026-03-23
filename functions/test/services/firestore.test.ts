@@ -1,52 +1,38 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FirestoreService } from '../../src/services/FirestoreService';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mkdtempSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { DataStoreService } from '../../src/services/DataStoreService';
 
-describe('FirestoreService', () => {
-  let firestoreService: FirestoreService;
-  let mockDb: any;
+describe('DataStoreService', () => {
+  let dataStoreService: DataStoreService;
 
   beforeEach(() => {
-    mockDb = {
-      collection: vi.fn().mockReturnThis(),
-      doc: vi.fn().mockReturnThis(),
-      set: vi.fn().mockResolvedValue(undefined),
-      update: vi.fn().mockResolvedValue(undefined),
-      get: vi.fn().mockResolvedValue({ empty: false, docs: [{ id: '1', data: () => ({ name: 'TestPage' }) }] }),
-      batch: vi.fn().mockReturnValue({
-        set: vi.fn(),
-        commit: vi.fn().mockResolvedValue(undefined),
-      }),
-    };
-    firestoreService = new FirestoreService(mockDb);
+    const testDir = mkdtempSync(join(tmpdir(), 'unievent-datastore-'));
+    dataStoreService = new DataStoreService(join(testDir, 'db.json'));
   });
 
   it('adds a page', async () => {
-    await firestoreService.addPage('1', { name: 'TestPage' });
-    expect(mockDb.collection).toHaveBeenCalledWith('pages');
-    expect(mockDb.doc).toHaveBeenCalledWith('1');
-    expect(mockDb.set).toHaveBeenCalledWith({ name: 'TestPage' }, { merge: true });
+    await dataStoreService.addPage('1', { name: 'TestPage' });
+    const pages = await dataStoreService.getPages();
+    expect(pages).toEqual([{ id: '1', name: 'TestPage' }]);
   });
 
   it('updates a page', async () => {
-    await firestoreService.updatePage('1', { name: 'UpdatedPage' });
-    expect(mockDb.collection).toHaveBeenCalledWith('pages');
-    expect(mockDb.doc).toHaveBeenCalledWith('1');
-    expect(mockDb.update).toHaveBeenCalledWith({ name: 'UpdatedPage' });
+    await dataStoreService.addPage('1', { name: 'TestPage' });
+    await dataStoreService.updatePage('1', { name: 'UpdatedPage' });
+    const pages = await dataStoreService.getPages();
+    expect(pages).toEqual([{ id: '1', name: 'UpdatedPage' }]);
   });
 
   it('gets pages', async () => {
-    const pages = await firestoreService.getPages();
-    expect(mockDb.collection).toHaveBeenCalledWith('pages');
-    expect(mockDb.get).toHaveBeenCalled();
+    await dataStoreService.addPage('1', { name: 'TestPage' });
+    const pages = await dataStoreService.getPages();
     expect(pages).toEqual([{ id: '1', name: 'TestPage' }]);
   });
 
   it('adds events', async () => {
-    const events = [{ id: 'e1', name: 'Event1' }];
-    const batch = mockDb.batch();
-    await firestoreService.addEvents('1', events as any);
-    expect(mockDb.collection).toHaveBeenCalledWith('events');
-    expect(batch.set).toHaveBeenCalled();
-    expect(batch.commit).toHaveBeenCalled();
+    const result = await dataStoreService.addEvents('1', [{ id: 'e1', name: 'Event1', start_time: new Date().toISOString() } as any]);
+    expect(result).toEqual({ upserted: 1 });
   });
 });

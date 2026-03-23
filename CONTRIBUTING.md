@@ -2,7 +2,7 @@
 
 First, some principles:
 
-- Make very strict database rules; tokens are stored there
+- Protect token storage and keep secrets out of git
 - Minimal personal data collection
 - Use git branches for features, frequent commits
 
@@ -38,15 +38,11 @@ Request .env files from a team member. Create local copies from examples:
    cp web/.env.example functions/.env
    ```
 
-4. **Service Account**:
-
-Request `serviceAccountKey.json` from a team member. Place it in root
-
-5. **Development**:
+4. **Development**:
 
    ```bash
    cd web && npm run dev            # Frontend dev server
-   cd functions && npm run serve    # backend Firebase emulator for testing functions
+   cd functions && npm run start    # backend API server
    ```
 
 ## Tech Stack 
@@ -64,25 +60,24 @@ Frontend:
 
 Backend:
 
-- Firebase Functions: make our backend handlers work when triggered by frontend or on schedule
-- Firebase Hosting: deploy the website through a particular url on the internet.
-- Firebase Firestore: cloud database for events, pages, and settings.
-- Firebase Storage: cloud storage specifically for images to speed up database reads
+- Node.js + Express: backend runtime and HTTP endpoints
+- Local JSON datastore: stores synced events/pages in `.data/db.json`
+- Local file storage: stores downloaded event images in `.data/images`
 - Google Secret Manager: dedicated mega-encrypted google cloud storage for tokens and env vars
-- Github Actions: automatically hosts "live" branch to Firebase
+- Github Actions: CI checks and automation
 - Facebook Graph API: automatically fetch event data from Facebook pages.
 - Axios: Simple HTTP client that calls http requests, especially for the facebook callback process
-- Express: We're not using express but we're using their format of HTTP responses and requests
+- Express types: request/response typing and route wiring
 - Jest: JavaScript testing framework
 - Vitest: TypeScript testing framework
 
 ## Architecture
 
-In general, we're very reliant on not just Facebook for the data, but Firebase for handling a lot of our backend security needs. You could put middleware/validation in the backend, but 1) firebase does a lot of that for us, and 2) this is a small school project with a small amount of students as its user base, not a bank 3) we don't have auth or profiles
+The project relies on Facebook for upstream event data. Backend persistence is local for development/runtime simplicity, while token handling is separated into Secret Manager.
 
 Our web-app is in some ways a SPA, single-page application in that the client/user carries a lot of the heavy weight, which is fine because our app has minimal interaction and only consists of under 10 pages. 
 
-Another important thing is that to maximize speed, we've put the database in the middle instead of behind the backend: The frontend makes quick calls to the database, meanwhile the backend is chiefly responsible for "ingesting" (populating) the DB with Facebook data on scheduled syncs, plus handling the callback. 
+Another important thing is the backend owns ingestion and normalization of Facebook data, while the frontend consumes prepared event records via the app layer.
 
 Frontend (/web):
 
@@ -116,15 +111,12 @@ DTUEvent/
 ├── README.md                                # general documentation
 ├── LICENSE
 ├── package.json                             # root npm scripts (build, tokens, deploy helpers)
-├── firebase.json                            # Firebase hosting config
-├── firestore.rules                          # Firestore security rules
-├── dtuevent-*-firebase-adminsdk-*.json      # service account (gitignored!)
-├── functions/                               # Cloud Functions (backend implementation)
+├── functions/                               # Backend implementation
 │   ├── package.json                         # backend npm scripts ()
 │   ├── tsconfig.json                        # TypeScript config
 │   ├── jest.config.js                       # Jest (JavaScript Test config)
 │   ├── src/
-│   │   ├── index.ts                         # entry-point for Firebase Functions
+│   │   ├── index.ts                         # entry-point for Express handlers
 │   │   ├── types.ts                         # type checking interfaces from TypeScript
 │   │   ├── handlers/
 │   │   │   ├── facebookCallbackHandler.ts   # handler for receiving token from FB when approved
@@ -132,13 +124,13 @@ DTUEvent/
 │   │   │   └── tokenRefreshHandler.ts       # refreshes FB tokens every 45 days
 │   │   ├── services/
 │   │   │   ├── FacebookService.ts           # CRUD for Facebook Graph API 
-│   │   │   ├── FirestoreService.ts          # CRUD for DB
+│   │   │   ├── DataStoreService.ts          # CRUD for local datastore
 │   │   │   ├── SecretManagerService.tsn     # CRUD for Google Secret Manager, for safely storing our tokens 
 │   │   │   └── StorageService.ts            # CRUD for images
 │   │   └── utils/
 │   │       ├── configUtil.ts                # centralized env and const config
 │   │       ├── depUtil.ts                   # dependency injection of services
-│   │       ├── eventNormalizerUtil.ts       # transforms Facebook events to our Firebase events
+│   │       ├── eventNormalizerUtil.ts       # transforms Facebook events to our datastore records
 │   │       └── httpStatusUtil.ts            # converts http status to msg (e.g. 500 = Internal Server Error)
 │   └── lib/                                 # Compiled TS to JS output, generated with npm run build
 │       ├── index.js
@@ -169,9 +161,9 @@ DTUEvent/
 │       │   ├── useEventCard.ts              # (but only if it changes states!)
 │       │   └── useFilterBar.ts
 │       ├── services/                        # connect to services
-│       │   ├── dal.ts                       # Data Access Layer, i.e. Firestore connection
+│       │   ├── dal.ts                       # Data Access Layer
 │       │   ├── facebook.ts
-│       │   └── firebase.ts
+│       │   └── ...
 │       ├── styles/                          # css styles
 │       │   ├── App.css                      # entire app styles
 │       │   ├── theme.css                    # Light/Dark theme styles
@@ -180,23 +172,15 @@ DTUEvent/
 │           ├── dateUtils.ts                 # Helper functions for converting and extracting dates
 │           └── eventUtils.ts                # Helper functions related to functions
 └── .github/                                 # GitHub Actions workflows
-   └── firebase-hosting-merge.yml            # Automatically deploys when merging into main
 ```
-
-## Firebase Security Rules
-
-Tokens stored in admin-only Firestore collections:
-
-- `events/` - Public read, admin write
-- `pages/` - Public read, admin write  
-- `admin-tokens/` - Admin only (no client access)
 
 ## Deployment
 
-GitHub Actions automatically deploys `main` branch to Firebase Hosting.
+Use your preferred platform to deploy the web build (`web/dist`) and backend server (`functions/lib/index.js`).
 
 Manual deployment:
 
 ```bash
-firebase deploy
+cd web && npm run build
+cd functions && npm run build
 ```

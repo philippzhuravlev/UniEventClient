@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { normalizeEvent } from '../../src/utils/eventNormalizerUtil';
 
 describe('normalizeEvent', () => {
-  it('should convert Facebook event to Firebase format', () => {
+  it('should convert Facebook event to stored event format', () => {
     const fbEvent = {
       id: '123',
       name: 'Test Event',

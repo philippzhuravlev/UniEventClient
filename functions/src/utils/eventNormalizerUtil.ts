@@ -1,9 +1,9 @@
-import type { FbEventResponse, FirestoreEvent } from '../types';
+import type { FbEventResponse, StoredEvent } from '../types';
 
-// this helpful little util converts ("normalizes") FbEventResponse, i.e. how Facebook sends 
-// us event data, into FirestoreEvent, i.e. how we want to store event data in Firestore
+// this helpful little util converts ("normalizes") FbEventResponse, i.e. how Facebook sends
+// us event data, into StoredEvent, i.e. how we store event data locally
 
-export function normalizeEvent(pageId: string, fbEvent: FbEventResponse): Partial<FirestoreEvent> {
+export function normalizeEvent(pageId: string, fbEvent: FbEventResponse): Partial<StoredEvent> {
     return {
         id: fbEvent.id,
         pageId,

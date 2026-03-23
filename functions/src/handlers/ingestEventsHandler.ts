@@ -2,17 +2,17 @@ import { HttpStatusUtil } from '../utils';
 import { Request, Response } from 'express';
 import type { Dependencies } from '../utils';
 
-// this handler "ingests" i.e. gets Facebook events and stores them in Firestore. 
+// this handler "ingests" i.e. gets Facebook events and stores them in the local datastore.
 // the function can be called manually or automatically (scheduled)
 
 export async function ingestEvents(deps: Dependencies) {
   // we convert deps into individual consts ("destructuring") for ez access
-  const { facebookService, secretManagerService, storageService, firestoreService } = deps;
+  const { facebookService, secretManagerService, storageService, dataStoreService } = deps;
 
   const startTime = Date.now();
 
-  // 1. get pages from Firestore
-  const pages = await firestoreService.getPages();
+  // 1. get pages from datastore
+  const pages = await dataStoreService.getPages();
 
   if (!pages || pages.length === 0) {
     return { totalPages: 0, totalEvents: 0, duration: Date.now() - startTime };
@@ -60,7 +60,7 @@ export async function ingestEvents(deps: Dependencies) {
 
       for (const event of events) {
         try {
-          // 4. store event cover image in Firebase Storage
+          // 4. store event cover image in local image storage
           let coverImageUrl = event.cover?.source;
 
           if (coverImageUrl) {
@@ -73,7 +73,7 @@ export async function ingestEvents(deps: Dependencies) {
             }
           }
 
-          // 5. normalize and prepare event data for Firestore
+          // 5. normalize and prepare event data for datastore
           eventsData.push({
             ...event,
             coverImageUrl,
@@ -84,8 +84,8 @@ export async function ingestEvents(deps: Dependencies) {
         }
       }
 
-      // 6. add events to Firestore
-      await firestoreService.addEvents(page.id, eventsData);
+      // 6. add events to datastore
+      await dataStoreService.addEvents(page.id, eventsData);
 
       totalEventsProcessed += eventsData.length;
       pageResults.push({
@@ -131,8 +131,7 @@ export async function handleManualIngest(req: Request, res: Response, deps: Depe
 }
 
 export async function handleScheduledIngest(event: any, context: any, deps: Dependencies) {
-  // this function is triggered by a scheduled Firebase (cloud) function (basically a cron 
-  // job) found in functions/index.ts
+  // this function is triggered by a schedule (cron-like invocation)
   try {
     const result = await ingestEvents(deps);
     return result;

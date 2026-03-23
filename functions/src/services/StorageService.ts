@@ -1,19 +1,27 @@
-import { Bucket } from '@google-cloud/storage';
+import { promises as fs } from 'fs';
+import path from 'path';
 import fetch from 'node-fetch';
 import { extension } from 'mime-types';
 
 export class StorageService {
-  // think of a bucket as a folder in cloud storage
-  constructor(private bucket: Bucket) {} // dependency injection thru constructor
+  private readonly baseDir: string;
+
+  constructor(baseDir?: string) {
+    this.baseDir = baseDir ?? path.join(process.cwd(), '.data', 'images');
+  }
+
+  private async ensureDir(): Promise<void> {
+    await fs.mkdir(this.baseDir, { recursive: true });
+  }
 
   async addImage(filePath: string, data: Buffer, contentType: string): Promise<string> {
-    const file = this.bucket.file(filePath);
+    await this.ensureDir();
+    const finalPath = path.join(this.baseDir, filePath);
+    await fs.mkdir(path.dirname(finalPath), { recursive: true });
+    await fs.writeFile(finalPath, data);
 
-    await file.save(data, { metadata: { contentType } });
-    await file.makePublic();
-
-    const encodedPath = encodeURIComponent(filePath); // encode special characters in the file path
-    return `https://firebasestorage.googleapis.com/v0/b/${this.bucket.name}/o/${encodedPath}?alt=media`;
+    // Return a local path that can later be served by a static file endpoint.
+    return `/images/${filePath}`;
   }
 
   async addImageFromUrl(filePath: string, sourceUrl: string): Promise<string> {
@@ -38,18 +46,18 @@ export class StorageService {
   }
 
   async getImage(filePath: string): Promise<string | null> {
-    const file = this.bucket.file(filePath);
-    const [exists] = await file.exists();
-    if (!exists) {
+    const finalPath = path.join(this.baseDir, filePath);
+    try {
+      await fs.access(finalPath);
+    } catch {
       return null;
     }
 
-    const encodedPath = encodeURIComponent(filePath); // encode special characters again
-    return `https://firebasestorage.googleapis.com/v0/b/${this.bucket.name}/o/${encodedPath}?alt=media`;
+    return `/images/${filePath}`;
   }
 
   async removeImage(filePath: string): Promise<void> {
-    const file = this.bucket.file(filePath);
-    await file.delete();
+    const finalPath = path.join(this.baseDir, filePath);
+    await fs.rm(finalPath, { force: true });
   }
 }

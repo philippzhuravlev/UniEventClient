@@ -1,5 +1,3 @@
-import type { Timestamp } from 'firebase-admin/firestore'; // firebase has their own Timestamp type
-
 // The whole point of typescript is "javascript with types", so this file predefines the types
 // (e.g. that str is indeed a str and http res is indeed a https res object). TS does this with 
 // interfaces that you apply to objects, though note that this is just for type checking, meanwhile
@@ -57,9 +55,9 @@ export interface FbLongLivedTokenResponse {
 }
 
 
-// FIRESTORE TYPES
-// i.e. how data is stored in Firestore
-export interface FirestoreEvent {
+// DATASTORE TYPES
+// i.e. how data is stored in our local datastore
+export interface StoredEvent {
   id: string;
   pageId: string;
   title: string;
@@ -74,21 +72,21 @@ export interface FirestoreEvent {
   raw?: any;
 }
 
-export interface FirestorePage {
+export interface StoredPage {
   id: string;
   name: string;
   pictureUrl: string;
   instagramId?: string;
   // token timestamps: some docs use tokenRefreshedAt (server timestamp), others use
   // tokenStoredAt/tokenExpiresAt fields. Support both shapes for backward-compatibility.
-  tokenRefreshedAt?: Timestamp | string; 
-  tokenStoredAt?: Timestamp | string;
-  tokenExpiresAt?: Timestamp | string;
+  tokenRefreshedAt?: string;
+  tokenStoredAt?: string;
+  tokenExpiresAt?: string;
   tokenExpiresInDays?: number;
   tokenStatus?: string;
   lastRefreshSuccess?: boolean;
   lastRefreshError?: string;
-  lastRefreshAttempt?: Timestamp | string;
+  lastRefreshAttempt?: string;
 }
 
 

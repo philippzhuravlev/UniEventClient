@@ -94,8 +94,8 @@ export class SecretManagerService {
   }
 
   async checkTokenExpiry(pageId: string): Promise<boolean> {
-    // For now, tokens don't expire in Secret Manager
-    // You're tracking expiry in Firestore (tokenExpiresAt field)
+    // For now, tokens don't expire in Secret Manager.
+    // Expiry is tracked in page metadata (tokenExpiresAt field).
     return false;
   }
 
