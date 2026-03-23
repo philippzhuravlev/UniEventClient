@@ -2,5 +2,8 @@
 // for easier imports elsewhere
 
 export * from './facebookCallbackHandler';
+export * from './eventsHandler';
+export * from './healthHandler';
 export * from './ingestEventsHandler';
 export * from './tokenRefreshHandler';
+export * from './pagesHandler';

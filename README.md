@@ -69,6 +69,28 @@ Or "TonkaProductions". Note that all contribute code.
 - Analytics dashboard for event engagement
 - Notification system for page admins (event sync status, token expiration)
 
+## API Endpoints
+
+Current backend endpoint surface:
+
+- `GET /callback` - Facebook OAuth callback handler
+- `POST /ingest` - Trigger manual ingestion job
+- `POST /refresh-tokens` - Trigger token refresh job
+- `GET /health` - Readiness check for backend uptime and CI smoke tests
+- `GET /pages` - Return all connected pages from local datastore
+- `GET /events` - Return normalized events (`pageId` and `limit` query params supported)
+- `GET /events/:id` - Return one normalized event by id
+- `POST /events/manual` - Submit a manual event payload (title + ISO startTime required)
+
+Frontend integration note:
+
+- Set `VITE_API_BASE_URL` in `web/.env` (for example `http://localhost:8080`) to call the backend from the web app.
+- If `VITE_API_BASE_URL` is not set, frontend calls use same-origin relative paths.
+
+Planned (bound, but not yet implemented):
+
+- None currently
+
 ## List
 
 Below are the pages for bars at DTU. Note well that some events are not listed through these pages, but those dedicated to social gatherings.

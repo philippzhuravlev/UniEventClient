@@ -9,7 +9,7 @@ First, some principles:
 ## Setting Up
 
 1. **Prerequisites**:
-   - Download Node.js 20+!
+   - Download Node.js 22+
 
 2. **Dependencies**:
 
@@ -35,7 +35,7 @@ Request .env files from a team member. Create local copies from examples:
    cp web/.env.example web/.env
 
    # Backend (in /functions .env)
-   cp web/.env.example functions/.env
+   cp .env.example functions/.env
    ```
 
 4. **Development**:
@@ -68,16 +68,28 @@ Backend:
 - Facebook Graph API: automatically fetch event data from Facebook pages.
 - Axios: Simple HTTP client that calls http requests, especially for the facebook callback process
 - Express types: request/response typing and route wiring
-- Jest: JavaScript testing framework
 - Vitest: TypeScript testing framework
+
+## Backend Endpoints
+
+Current HTTP endpoints exposed by `functions/src/index.ts`:
+
+- `GET /callback` Facebook OAuth callback
+- `POST /ingest` manual ingest trigger
+- `POST /refresh-tokens` token refresh trigger
+- `GET /health` readiness endpoint
+- `GET /pages` list connected pages
+- `GET /events` list normalized events (`pageId`, `limit` query params)
+- `GET /events/:id` get one event by ID
+- `POST /events/manual` submit manual event payload
 
 ## Architecture
 
 The project relies on Facebook for upstream event data. Backend persistence is local for development/runtime simplicity, while token handling is separated into Secret Manager.
 
-Our web-app is in some ways a SPA, single-page application in that the client/user carries a lot of the heavy weight, which is fine because our app has minimal interaction and only consists of under 10 pages. 
+Our web-app is in some ways a SPA, single-page application in that the client/user carries a lot of the heavy weight, which is fine because our app has minimal interaction and only consists of under 10 pages.
 
-Another important thing is the backend owns ingestion and normalization of Facebook data, while the frontend consumes prepared event records via the app layer.
+Another important thing is the backend owns ingestion and normalization of Facebook data, while the frontend consumes prepared event records via an API-first DAL (`web/src/services/dal.ts`) with mock fallback.
 
 Frontend (/web):
 
@@ -103,30 +115,34 @@ Misc:
 In general: 
 - functions is backend, web is frontend
 - root dir for config and docs, */src for code
-- npm run build produces */src/dist for JS code and */src/node_modules for packages 
+- `npm run build` outputs compiled backend JS to `functions/lib` and frontend assets to `web/dist`
 
 ```text
 DTUEvent/
 ├── CONTRIBUTING.md                          # techical documentation
 ├── README.md                                # general documentation
 ├── LICENSE
-├── package.json                             # root npm scripts (build, tokens, deploy helpers)
+├── package.json                             # root npm scripts
 ├── functions/                               # Backend implementation
-│   ├── package.json                         # backend npm scripts ()
+│   ├── package.json                         # backend npm scripts
 │   ├── tsconfig.json                        # TypeScript config
-│   ├── jest.config.js                       # Jest (JavaScript Test config)
 │   ├── src/
 │   │   ├── index.ts                         # entry-point for Express handlers
 │   │   ├── types.ts                         # type checking interfaces from TypeScript
+│   │   ├── apiContracts.ts                  # typed endpoint contracts and payloads
+│   │   ├── endpoints.ts                     # endpoint binding registry
 │   │   ├── handlers/
 │   │   │   ├── facebookCallbackHandler.ts   # handler for receiving token from FB when approved
+│   │   │   ├── eventsHandler.ts             # list/get/manual event handlers
+│   │   │   ├── healthHandler.ts             # readiness endpoint
 │   │   │   ├── ingestEventsHandler.ts       # scheduled population of DB events from FB pages
+│   │   │   ├── pagesHandler.ts              # list pages endpoint
 │   │   │   └── tokenRefreshHandler.ts       # refreshes FB tokens every 45 days
 │   │   ├── services/
-│   │   │   ├── FacebookService.ts           # CRUD for Facebook Graph API 
-│   │   │   ├── DataStoreService.ts          # CRUD for local datastore
-│   │   │   ├── SecretManagerService.tsn     # CRUD for Google Secret Manager, for safely storing our tokens 
-│   │   │   └── StorageService.ts            # CRUD for images
+│   │   │   ├── FacebookService.ts           # Facebook Graph API integration
+│   │   │   ├── DataStoreService.ts          # local datastore (.data/db.json)
+│   │   │   ├── SecretManagerService.ts      # Google Secret Manager integration
+│   │   │   └── StorageService.ts            # local image storage
 │   │   └── utils/
 │   │       ├── configUtil.ts                # centralized env and const config
 │   │       ├── depUtil.ts                   # dependency injection of services
@@ -162,6 +178,7 @@ DTUEvent/
 │       │   └── useFilterBar.ts
 │       ├── services/                        # connect to services
 │       │   ├── dal.ts                       # Data Access Layer
+│       │   ├── apiBindings.ts               # typed frontend endpoint bindings
 │       │   ├── facebook.ts
 │       │   └── ...
 │       ├── styles/                          # css styles
@@ -183,4 +200,14 @@ Manual deployment:
 ```bash
 cd web && npm run build
 cd functions && npm run build
+```
+
+## Smoke Checks
+
+After starting backend with `cd functions && npm run start`, you can test endpoints quickly:
+
+```bash
+curl http://localhost:8080/health
+curl http://localhost:8080/pages
+curl http://localhost:8080/events
 ```
