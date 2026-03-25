@@ -4,6 +4,22 @@ This document is the **non-technical** part of DTU Event documentation, for gene
 
 This website will be a central registry for Technical University of Denmark (DTU)'s campus events from bars and cafes. JS/Node.js/REACT/Tailwind frontend, Firestore backend for hosting and DB. The site pulls through facebook's API from a number of DTU Campus bars and nearby form bars. Note that we do not discriminate between Lyngby Campus and Ballerup Campus.
 
+## REST API Communication
+
+The web client now uses the UniEvent server REST API as its primary data source:
+
+- `GET /health` for backend readiness checks
+- `GET /pages` for connected pages
+- `GET /events` for event feed
+- `GET /events/:id` for event details
+- `GET /callback` as Facebook OAuth redirect target
+
+Use `web/.env` to configure:
+
+- `VITE_API_BASE_URL` (default `http://localhost:8080`)
+- `VITE_USE_MOCK_FALLBACK` (`true` to use mock data if API calls fail)
+- `VITE_FACEBOOK_APP_ID` (Facebook OAuth client id)
+
 ## Problem
 
 DTU student events are currently fragmented across many Facebook pages (PF sub‑orgs, bars, dorms, ad‑hoc groups). New and international students especially struggle to discover what is happening without already following 10-20 pages or relying on friends’ “Interested” facebook signals. DTUEvent provides a single neutral, lightweight, mobile‑friendly web feed aggregating events (initially via mock data + pages where we have admin tokens). A web app (instead of native) keeps scope realistic and instantly accessible.
