@@ -184,7 +184,10 @@ export function MainPage() { // function for main page (can be used in other fil
       </div>
 
       {viewMode === 'list' ? (
-        <EventList list={list} /> /* the final list of events shown after all filters have been applied */
+        <>
+          {/* the final list of events shown after all filters have been applied */}
+          <EventList list={list} />
+        </>
       ) : (
         <CalendarView events={list} />
       )}
