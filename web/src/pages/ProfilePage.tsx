@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { onAuthUserChanged, signOutCurrentUser, type AuthUser } from '../services/auth';
+import { getStoredAccountRole, getStoredOrganizerNames, onAuthUserChanged, signOutCurrentUser, type AuthUser } from '../services/auth';
 import { CalendarDays, CircleUserRound, Heart, LogOut, MapPin, Ticket } from 'lucide-react';
 
 function buildUsername(user: AuthUser | null) {
@@ -46,6 +46,8 @@ export function ProfilePage() {
     const userLabel = currentUser?.displayName || currentUser?.email || 'Profile';
     const username = buildUsername(currentUser);
     const profileImage = currentUser?.photoURL;
+    const accountRole = getStoredAccountRole(currentUser?.uid);
+    const organizerNames = getStoredOrganizerNames(currentUser?.uid);
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -99,12 +101,37 @@ export function ProfilePage() {
                             <h2 className="mt-3 text-3xl font-bold text-[var(--text-primary)] md:text-5xl">
                                 {username}
                             </h2>
+                            <span className="mt-3 inline-flex items-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.09em] text-[var(--text-primary)]">
+                                {accountRole === 'organizer' ? 'Organisor' : 'User'}
+                            </span>
                             <p className="mt-2 text-lg text-[var(--text-primary)] md:text-2xl">
                                 {userLabel}
                             </p>
                             <p className="mt-3 text-sm text-[var(--text-subtle)]">
                                 {currentUser?.email || 'No email available'}
                             </p>
+
+                            {accountRole === 'organizer' && (
+                                <div className="mt-4 w-full md:ml-auto md:w-[430px] rounded-2xl border border-[var(--panel-border)] bg-[var(--input-bg)] p-3">
+                                    <div className="flex flex-col gap-3">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-subtle)] md:text-right">
+                                            Organizations You Organize For
+                                        </p>
+                                        <div className="flex flex-col items-start gap-2 md:items-end">
+                                            {organizerNames.length ? organizerNames.map((organization) => (
+                                                <span
+                                                    key={organization}
+                                                    className="inline-flex items-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)]"
+                                                >
+                                                    {organization}
+                                                </span>
+                                            )) : (
+                                                <span className="text-sm text-[var(--text-subtle)] md:text-right">No organizations linked yet.</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="mt-6 flex flex-wrap justify-center gap-3 md:justify-start">
                                 <Link

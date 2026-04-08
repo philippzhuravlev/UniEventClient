@@ -25,6 +25,8 @@ vi.mock('../../services/firebase', () => ({
 }));
 
 import {
+    getStoredAccountRole,
+    getStoredOrganizerNames,
     loginWithEmail,
     mapAuthError,
     onAuthUserChanged,
@@ -41,6 +43,7 @@ describe('auth service', () => {
         mockOnAuthStateChanged.mockReset();
         mockSignOut.mockReset();
         mockGetAuthInstance.mockClear();
+        window.localStorage.clear();
     });
 
     it('logs in with email and password', async () => {
@@ -67,10 +70,18 @@ describe('auth service', () => {
         const fakeUser = { uid: 'user-2' };
         mockCreateUserWithEmailAndPassword.mockResolvedValueOnce({ user: fakeUser });
 
-        const user = await signupWithEmail({ username: '  Alice  ', email: 'alice@example.com', password: 'secret123' });
+        const user = await signupWithEmail({
+            username: '  Alice  ',
+            email: 'alice@example.com',
+            password: 'secret123',
+            role: 'organizer',
+            organizerNames: ['UniEvent Core Team', 'DTU Campus Events'],
+        });
 
         expect(mockCreateUserWithEmailAndPassword).toHaveBeenCalledWith(mockAuthInstance, 'alice@example.com', 'secret123');
         expect(mockUpdateProfile).toHaveBeenCalledWith(fakeUser, { displayName: 'Alice' });
+        expect(getStoredAccountRole('user-2')).toBe('organizer');
+        expect(getStoredOrganizerNames('user-2')).toEqual(['UniEvent Core Team', 'DTU Campus Events']);
         expect(user).toBe(fakeUser);
     });
 
@@ -152,5 +163,13 @@ describe('auth service', () => {
         const err = new Error('Missing Firebase env variables: VITE_FIREBASE_API_KEY');
 
         expect(mapAuthError(err)).toBe('Missing Firebase env variables: VITE_FIREBASE_API_KEY');
+    });
+
+    it('defaults to user role when no role is saved', () => {
+        expect(getStoredAccountRole('unknown-user')).toBe('user');
+    });
+
+    it('defaults to no organizations when none are saved', () => {
+        expect(getStoredOrganizerNames('unknown-user')).toEqual([]);
     });
 });

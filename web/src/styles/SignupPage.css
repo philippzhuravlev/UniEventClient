@@ -75,6 +75,25 @@ html.dark .signup-card-glow {
     font-weight: 600;
 }
 
+.signup-helper-soft {
+    margin-top: 0.2rem;
+    color: var(--text-subtle);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.signup-role-indicator {
+    margin: 0.5rem 0 0;
+    color: var(--text-subtle);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.signup-role-indicator-subtle {
+    margin-top: 0.3rem;
+    font-weight: 600;
+}
+
 .signup-form {
     margin-top: 1.5rem;
     display: grid;
@@ -111,10 +130,46 @@ html.dark .signup-card-glow {
     transform: translateY(-1px);
 }
 
+.signup-organizer-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.signup-code-add-btn {
+    border-radius: 12px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.signup-code-add-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--input-focus-border);
+    background: var(--button-hover);
+}
+
+.signup-code-add-btn:focus-visible {
+    outline: 2px solid var(--input-focus-border);
+    outline-offset: 2px;
+}
+
 .signup-actions {
     margin-top: 0.9rem;
     display: grid;
     gap: 0.75rem;
+}
+
+.signup-helper-soft p {
+    margin: 0.18rem 0 0;
 }
 
 .signup-status {
@@ -199,6 +254,60 @@ html.dark .signup-btn-facebook:hover {
 .signup-link:hover {
     color: var(--link-primary-hover);
     text-decoration: underline;
+}
+
+.signup-role-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 12, 24, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 70;
+    padding: 1rem;
+}
+
+.signup-role-modal {
+    width: min(460px, 100%);
+    border-radius: 20px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel-bg);
+    box-shadow: 0 24px 46px rgba(0, 0, 0, 0.28);
+    padding: 1.25rem;
+}
+
+.signup-role-modal-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.signup-role-modal-text {
+    margin: 0.55rem 0 0;
+    color: var(--text-subtle);
+    font-size: 0.95rem;
+}
+
+.signup-role-modal-actions {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.signup-role-modal-cancel {
+    margin-top: 0.9rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-subtle);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.signup-role-modal-cancel:hover {
+    color: var(--text-primary);
 }
 
 @media (min-width: 640px) {
