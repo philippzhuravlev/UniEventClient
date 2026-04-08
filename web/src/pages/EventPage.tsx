@@ -76,7 +76,7 @@ export function EventPage() {
               >
                 <button
                   onClick={() => {
-                    window.open(buildGoogleCalendarUrl(event), '_blank');
+                    window.open(buildGoogleCalendarUrl(event), '_blank', 'noopener,noreferrer');
                     setShowAddMenu(false);
                   }}
                   className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-[var(--input-bg)] transition"
