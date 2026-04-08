@@ -1,7 +1,5 @@
 import type { Event } from '../types';
 
-const encode = (value: string) => encodeURIComponent(value || '');
-
 function formatYmdhms(date: Date) {
   // Google/ICS wants UTC in YYYYMMDDTHHMMSSZ format
   const pad = (num: number) => String(num).padStart(2, '0');
@@ -22,6 +20,14 @@ function safeDate(dateIso: string | undefined): Date | undefined {
   const d = new Date(dateIso);
   if (Number.isNaN(d.getTime())) return undefined;
   return d;
+}
+
+function escapeIcsText(text: string | undefined): string {
+  return (text || '')
+    .replace(/\\/g, '\\\\')    // Backslash first (to avoid double-escaping)
+    .replace(/;/g, '\\;')      // Semicolon
+    .replace(/,/g, '\\,')      // Comma
+    .replace(/\n/g, '\\n');    // Newline
 }
 
 export function buildGoogleCalendarUrl(event: Event): string {
@@ -62,16 +68,16 @@ export function buildIcs(event: Event): string {
     `DTSTAMP:${dtstamp}`,
     `DTSTART:${dtstart}`,
     `DTEND:${dtend}`,
-    `SUMMARY:${(event.title || '').replace(/\n/g, ' ')}`,
-    `DESCRIPTION:${(event.description || '').replace(/\n/g, ' ')}`,
+    `SUMMARY:${escapeIcsText(event.title)}`,
+    `DESCRIPTION:${escapeIcsText(event.description)}`,
   ];
 
   if (event.place?.name) {
-    lines.push(`LOCATION:${event.place.name}`);
+    lines.push(`LOCATION:${escapeIcsText(event.place.name)}`);
   }
 
   if (event.eventURL) {
-    lines.push(`URL:${event.eventURL}`);
+    lines.push(`URL:${escapeIcsText(event.eventURL)}`);
   }
 
   lines.push('END:VEVENT', 'END:VCALENDAR');

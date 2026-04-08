@@ -95,7 +95,7 @@ export function CalendarView({ events }: { events: Event[] }) {
       }
 
       // If event spans more than maxDays, ensure at least start and end are represented
-      if (days >= maxDays && endDay > cursor) {
+      if (days >= maxDays && endDay >= cursor) {
         addEventForKey(formatYMD(endDay), evt);
       }
     }
