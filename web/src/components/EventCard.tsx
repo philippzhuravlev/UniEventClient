@@ -2,6 +2,7 @@ import type { Event } from '../types';
 import { formatEventStart } from '../utils/eventUtils';
 import { useEventCard } from '../hooks/useEventCard';
 import { FacebookLinkButton } from './FacebookLinkButton';
+import { LikeButton } from './LikeButton';
 import { ChevronDown } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
 
@@ -94,7 +95,10 @@ export function EventCard({ event }: { event: Event }) {
 
         {/* bottom section: link button and chevron */}
         <div className="flex items-center justify-between mt-4 gap-2 px-4 pb-4">
-          <FacebookLinkButton event={event} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <LikeButton event={event} compact />
+            <FacebookLinkButton event={event} />
+          </div>
           
           {/* chevron button in bottom right - only show if description can be expanded */}
           {/* chevron means an arrow minus the stick so just the arrowhead */}

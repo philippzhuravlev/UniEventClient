@@ -5,6 +5,7 @@ import { getEventById } from '../services/dal';
 import { formatEventStart } from '../utils/eventUtils';
 import { downloadIcs, buildGoogleCalendarUrl } from '../utils/calendarUtils';
 import { FacebookLinkButton } from '../components/FacebookLinkButton';
+import { LikeButton } from '../components/LikeButton';
 
 export function EventPage() {
   const { id } = useParams<{ id: string }>(); // id for /events/:id
@@ -95,6 +96,7 @@ export function EventPage() {
               </div>
             )}
 
+            <LikeButton event={event} />
             <FacebookLinkButton event={event} />
           </div>
         </div>

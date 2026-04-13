@@ -4,6 +4,11 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
 import { getStoredAccountRole, getStoredOrganizerNames, onAuthUserChanged, signOutCurrentUser, type AuthUser } from '../services/auth';
 import { buildFacebookLoginUrl } from '../services/facebook';
+import { getEvents } from '../services/dal';
+import { getLikedEventIds, LIKES_CHANGED_EVENT } from '../services/likes';
+import { formatEventStart } from '../utils/eventUtils';
+import type { Event as EventType } from '../types';
+import { LikeButton } from '../components/LikeButton';
 import { CalendarDays, CircleUserRound, Heart, LogOut, MapPin, Ticket } from 'lucide-react';
 
 function buildUsername(user: AuthUser | null) {
@@ -22,6 +27,8 @@ export function ProfilePage() {
     const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
     const [isSigningOut, setIsSigningOut] = useState(false);
+    const [likedEvents, setLikedEvents] = useState<EventType[]>([]);
+    const [isLoadingLikedEvents, setIsLoadingLikedEvents] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthUserChanged((user) => {
@@ -49,6 +56,54 @@ export function ProfilePage() {
     const profileImage = currentUser?.photoURL;
     const accountRole = getStoredAccountRole(currentUser?.uid);
     const organizerNames = getStoredOrganizerNames(currentUser?.uid);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadLikedEvents = async () => {
+            if (!currentUser?.uid) {
+                setLikedEvents([]);
+                setIsLoadingLikedEvents(false);
+                return;
+            }
+
+            setIsLoadingLikedEvents(true);
+
+            try {
+                const [events, likedEventIds] = await Promise.all([
+                    getEvents(),
+                    Promise.resolve(getLikedEventIds(currentUser.uid)),
+                ]);
+
+                if (cancelled) {
+                    return;
+                }
+
+                const likedEventIdSet = new Set(likedEventIds);
+                setLikedEvents(
+                    events
+                        .filter((event) => likedEventIdSet.has(event.id))
+                        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                );
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingLikedEvents(false);
+                }
+            }
+        };
+
+        const handleLikesChanged = () => {
+            void loadLikedEvents();
+        };
+
+        void loadLikedEvents();
+        window.addEventListener(LIKES_CHANGED_EVENT, handleLikesChanged);
+
+        return () => {
+            cancelled = true;
+            window.removeEventListener(LIKES_CHANGED_EVENT, handleLikesChanged);
+        };
+    }, [currentUser?.uid]);
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -201,54 +256,72 @@ export function ProfilePage() {
                             </p>
                         </div>
 
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)]"
-                        >
-                            <Heart size={16} />
-                            Liked events
-                        </button>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)]">
+                            <Heart size={16} fill="currentColor" />
+                            {likedEvents.length} saved
+                        </div>
                     </div>
 
-                    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {[
-                            { title: 'Event title will appear here', location: 'Venue or room', date: 'Date and time', badge: 'Liked event' },
-                            { title: 'Another saved event', location: 'Campus location', date: 'Date and time', badge: 'Liked event' },
-                            { title: 'Future liked event', location: 'Place holder', date: 'Date and time', badge: 'Liked event' },
-                        ].map((item, index) => (
-                            <article
-                                key={index}
-                                className="overflow-hidden rounded-2xl border border-[var(--panel-border)] bg-[var(--input-bg)]"
-                            >
-                                <div className="h-36 bg-[linear-gradient(135deg,rgba(59,130,246,0.45),rgba(20,184,166,0.35))]" />
-                                <div className="space-y-3 p-4">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)]">
-                                            <Heart size={12} />
-                                            {item.badge}
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 text-xs text-[var(--text-subtle)]">
-                                            <Ticket size={12} />
-                                            Saved
-                                        </span>
+                    {isLoadingLikedEvents ? (
+                        <p className="mt-6 text-sm text-[var(--text-subtle)]">Loading liked events...</p>
+                    ) : likedEvents.length === 0 ? (
+                        <div className="mt-6 rounded-2xl border border-dashed border-[var(--panel-border)] bg-[var(--input-bg)]/60 p-8 text-center">
+                            <Heart size={20} className="mx-auto text-[var(--text-subtle)]" />
+                            <p className="mt-3 text-base font-semibold text-[var(--text-primary)]">
+                                No liked events yet
+                            </p>
+                            <p className="mt-2 text-sm text-[var(--text-subtle)]">
+                                Tap the heart on an event to save it here.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {likedEvents.map((event) => (
+                                <article
+                                    key={event.id}
+                                    className="overflow-hidden rounded-2xl border border-[var(--panel-border)] bg-[var(--input-bg)]"
+                                >
+                                    <div className="h-36 bg-[linear-gradient(135deg,rgba(59,130,246,0.45),rgba(20,184,166,0.35))]">
+                                        {event.coverImageUrl && (
+                                            <img
+                                                src={event.coverImageUrl}
+                                                alt={event.title}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        )}
                                     </div>
-                                    <h4 className="text-lg font-bold text-[var(--text-primary)]">
-                                        {item.title}
-                                    </h4>
-                                    <div className="space-y-2 text-sm text-[var(--text-subtle)]">
-                                        <div className="flex items-center gap-2">
-                                            <CalendarDays size={14} />
-                                            <span>{item.date}</span>
+                                    <div className="space-y-3 p-4">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)]">
+                                                <Heart size={12} fill="currentColor" />
+                                                Liked event
+                                            </span>
+                                            <LikeButton event={event} compact />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <MapPin size={14} />
-                                            <span>{item.location}</span>
+                                        <Link to={`/events/${event.id}`} className="block">
+                                            <h4 className="text-lg font-bold text-[var(--text-primary)] hover:underline">
+                                                {event.title}
+                                            </h4>
+                                        </Link>
+                                        <div className="space-y-2 text-sm text-[var(--text-subtle)]">
+                                            <div className="flex items-center gap-2">
+                                                <CalendarDays size={14} />
+                                                <span>{formatEventStart(event.startTime)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <MapPin size={14} />
+                                                <span>{event.place?.name || 'Location TBA'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Ticket size={14} />
+                                                <span>Saved to your profile</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                 </section>
             </main>
 
