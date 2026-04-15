@@ -161,28 +161,20 @@ export function ProfilePage() {
                     </div>
                 </div>
 
-                <div className="header-toggle flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={handleSignOut}
-                            disabled={isSigningOut}
-                            aria-label="Log out"
-                            className="profile-header-logout-btn inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] disabled:cursor-not-allowed disabled:opacity-70 sm:px-4 sm:text-sm"
-                        >
-                            <LogOut size={18} />
-                            <span className="profile-header-logout-label">
-                                {isSigningOut ? 'Signing out...' : 'Log out'}
-                            </span>
-                        </button>
-                        <ThemeToggle />
-                    </div>
-                    <Link
-                        to="/"
-                        className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] sm:px-5 sm:text-sm"
+                <div className="header-toggle relative flex flex-col md:flex-row items-end md:items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={handleSignOut}
+                        disabled={isSigningOut}
+                        aria-label="Log out"
+                        className="profile-header-logout-btn inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] disabled:cursor-not-allowed disabled:opacity-70 sm:px-4 sm:text-sm"
                     >
-                        Back to Events
-                    </Link>
+                        <LogOut size={18} />
+                        <span className="profile-header-logout-label">
+                            {isSigningOut ? 'Signing out...' : 'Log out'}
+                        </span>
+                    </button>
+                    <ThemeToggle />
                 </div>
             </header>
 
