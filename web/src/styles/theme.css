@@ -298,6 +298,10 @@ html.dark {
     overflow: visible;
   }
 
+  .profile-header-text {
+    margin-top: 0.55rem;
+  }
+
   .header-toggle .profile-header-logout-btn {
     width: 42px;
     height: 40px;

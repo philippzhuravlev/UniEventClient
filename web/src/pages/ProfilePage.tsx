@@ -59,7 +59,7 @@ export function ProfilePage() {
                         alt="DTU Logo"
                         className="header-logo"
                     />
-                    <div className="header-text">
+                    <div className="header-text profile-header-text">
                         <h1 className="header-title">Profile</h1>
                         <p className="header-subtitle">View your account details</p>
                     </div>
