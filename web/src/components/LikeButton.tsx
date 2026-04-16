@@ -68,12 +68,16 @@ export function LikeButton({ event, compact = false, iconOnly = false, className
         ? 'inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)]'
         : 'inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors duration-200';
     const iconOnlyClasses = iconOnly
-        ? 'h-12 w-12 justify-center rounded-xl border border-white/85 bg-white/96 p-0 shadow-[0_8px_18px_rgba(16,24,40,0.14)] backdrop-blur-sm hover:bg-white dark:border-white/45 dark:bg-black/30 dark:shadow-[0_4px_14px_rgba(0,0,0,0.35)] dark:hover:bg-black/38'
+        ? 'h-12 w-12 justify-center rounded-xl border p-0 shadow-[0_8px_18px_rgba(16,24,40,0.10)] backdrop-blur-md transition-colors duration-200'
         : '';
-    const stateClasses = isLiked
-        ? 'border-[color-mix(in_srgb,var(--dtu-accent)_55%,var(--panel-border)_45%)] bg-[color-mix(in_srgb,var(--dtu-accent)_16%,var(--panel-bg)_84%)] text-[var(--text-primary)]'
-        : 'border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)] hover:bg-[var(--button-hover)]';
-    const rootClasses = iconOnly ? 'text-[var(--text-primary)] hover:text-[var(--dtu-accent)] dark:text-white dark:hover:text-[var(--dtu-accent-light)]' : stateClasses;
+    const stateClasses = iconOnly
+        ? isLiked
+            ? 'border-[color-mix(in_srgb,var(--dtu-accent)_55%,var(--panel-border)_45%)] bg-[rgba(255,255,255,0.18)] text-[var(--dtu-accent)] hover:bg-[rgba(255,255,255,0.26)] dark:bg-[rgba(18,20,36,0.72)] dark:text-[var(--dtu-accent-light)] dark:hover:bg-[rgba(30,63,242,0.16)]'
+            : 'border-[var(--panel-border)] bg-[rgba(255,255,255,0.18)] text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.26)] dark:bg-[rgba(18,20,36,0.72)] dark:text-[var(--text-primary)] dark:hover:bg-[rgba(30,63,242,0.16)]'
+        : isLiked
+            ? 'border-[color-mix(in_srgb,var(--dtu-accent)_55%,var(--panel-border)_45%)] bg-[color-mix(in_srgb,var(--dtu-accent)_16%,var(--panel-bg)_84%)] text-[var(--dtu-accent)] hover:bg-[color-mix(in_srgb,var(--dtu-accent)_22%,var(--panel-bg)_78%)] dark:text-[var(--dtu-accent-light)]'
+            : 'border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)] hover:bg-[var(--button-hover)] dark:text-[var(--text-primary)] dark:hover:bg-[rgba(30,63,242,0.16)]';
+    const rootClasses = stateClasses;
 
     return (
         <button
