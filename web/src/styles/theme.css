@@ -387,24 +387,43 @@ html.dark input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
-/* Phone consistency: always keep date range in one row on phones */
+/* Phone consistency: keep date range controls on one line with two distinct inputs */
 @media (max-width: 640px) {
   .date-range-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    display: flex;
     align-items: center;
-    column-gap: 0.35rem;
+    column-gap: 0.4rem;
+    border: none;
+    background: transparent;
+    padding: 0;
+  }
+
+  .date-range-row>svg {
+    display: none;
   }
 
   .date-range-input {
     width: 100%;
     min-width: 0;
+    flex: 1 1 0;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    border-radius: 0.75rem;
+    padding: 0.6rem 0.7rem;
   }
 
   .date-range-separator {
     padding-left: 0;
     padding-right: 0;
-    font-size: 0.9rem;
+    font-size: 0;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .date-range-separator::before {
+    content: '→';
+    font-size: 1rem;
+    color: var(--text-subtle);
   }
 }
 

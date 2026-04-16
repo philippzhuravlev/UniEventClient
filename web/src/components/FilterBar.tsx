@@ -220,7 +220,7 @@ function ActiveFilters(props: {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-t border-[var(--panel-border)] pt-4">
+    <div className="mt-3 flex flex-wrap items-center gap-2 pt-4">
       <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-subtle)]">Active filters</span>
 
       {props.query && (
