@@ -2,6 +2,7 @@ import type { Event } from '../types';
 import { formatEventStart } from '../utils/eventUtils';
 import { useEventCard } from '../hooks/useEventCard';
 import { FacebookLinkButton } from './FacebookLinkButton';
+import { LikeButton } from './LikeButton';
 import { ChevronDown } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
 
@@ -52,11 +53,18 @@ export function EventCard({ event }: { event: Event }) {
       }}
     >
       {/* card */}
-      <div className="relative bubble flex flex-col overflow-hidden">
+      <div className="relative bubble flex flex-col overflow-visible">
+        <LikeButton
+          event={event}
+          compact
+          iconOnly
+          className="absolute right-4 top-4 z-20"
+        />
+
         {/* NEW badge */}
         {isNew && (
           <div className="mb-3">
-            <span className="rounded-full bg-gradient-to-r from-[var(--dtu-accent)] to-[var(--dtu-accent-light)] text-white text-xs font-bold px-3 py-1.5 shadow-lg right-4 top-4 absolute">
+            <span className="rounded-full bg-gradient-to-r from-[var(--dtu-accent)] to-[var(--dtu-accent-light)] text-white text-xs font-bold px-3 py-1.5 shadow-lg left-4 top-4 absolute z-10">
               New event
             </span>
           </div>

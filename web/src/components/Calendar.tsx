@@ -130,6 +130,8 @@ export function CalendarView({ events }: { events: Event[] }) {
 
   const goToday = () => setViewDate(new Date());
 
+  const navButtonClass = 'px-3 py-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)] text-sm font-semibold transition hover:bg-[var(--input-bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--link-primary)]';
+
   const viewLabel = viewMode === 'month'
     ? viewDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })
     : `Week of ${startOfWeek(viewDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
@@ -140,21 +142,21 @@ export function CalendarView({ events }: { events: Event[] }) {
         <div className="flex items-center gap-2">
           <button
             onClick={goPrev}
-            className="px-3 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--panel-bg)] hover:bg-[var(--input-bg)] text-sm"
+            className={navButtonClass}
             aria-label={viewMode === 'month' ? 'Previous month' : 'Previous week'}
           >
             ‹
           </button>
           <button
             onClick={goToday}
-            className="px-3 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--panel-bg)] hover:bg-[var(--input-bg)] text-sm"
+            className={navButtonClass}
             aria-label="Go to current date"
           >
             Today
           </button>
           <button
             onClick={goNext}
-            className="px-3 py-2 rounded-lg border border-[var(--input-border)] bg-[var(--panel-bg)] hover:bg-[var(--input-bg)] text-sm"
+            className={navButtonClass}
             aria-label={viewMode === 'month' ? 'Next month' : 'Next week'}
           >
             ›
@@ -167,22 +169,20 @@ export function CalendarView({ events }: { events: Event[] }) {
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${
-                viewMode === 'month'
-                  ? 'bg-[var(--link-primary)] text-white border-transparent'
-                  : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
-              }`}
+              className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${viewMode === 'month'
+                ? 'bg-[var(--link-primary)] text-white border-transparent'
+                : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
+                }`}
             >
               Month
             </button>
             <button
               type="button"
               onClick={() => setViewMode('week')}
-              className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${
-                viewMode === 'week'
-                  ? 'bg-[var(--link-primary)] text-white border-transparent'
-                  : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
-              }`}
+              className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${viewMode === 'week'
+                ? 'bg-[var(--link-primary)] text-white border-transparent'
+                : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
+                }`}
             >
               Week
             </button>
@@ -210,12 +210,11 @@ export function CalendarView({ events }: { events: Event[] }) {
               return (
                 <div
                   key={dayKey}
-                  className={`min-h-[110px] rounded-xl border p-2 text-xs flex flex-col gap-1 transition-colors ${
-                    isCurrentMonth ? 'bg-[var(--panel-bg)]' : 'bg-[var(--input-bg)] text-[var(--text-subtle)]'
-                  } ${isToday ? 'border-[var(--link-primary)] shadow-sm' : 'border-[var(--panel-border)]'} `}
+                  className={`min-h-[110px] rounded-xl border p-2 text-xs flex flex-col gap-1 transition-colors ${isCurrentMonth ? 'bg-[var(--panel-bg)]' : 'bg-[var(--input-bg)] text-[var(--text-subtle)]'
+                    } ${isToday ? 'border-[var(--link-primary)] shadow-sm' : 'border-[var(--panel-border)]'} `}
                 >
                   <div className="flex items-start justify-between">
-                    <span className="font-semibold">{day.getDate()}</span>
+                    <span className="font-semibold text-[var(--text-primary)]">{day.getDate()}</span>
                     {dayEvents.length > 0 && (
                       <span className="rounded-full bg-[var(--link-primary)] text-white px-2 py-0.5 text-[11px] font-semibold">
                         {dayEvents.length}

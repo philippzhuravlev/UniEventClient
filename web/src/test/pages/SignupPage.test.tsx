@@ -33,6 +33,14 @@ function renderPage() {
     );
 }
 
+async function chooseUserRole(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'User' }));
+}
+
+async function chooseOrganizerRole(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'Organisor' }));
+}
+
 describe('SignupPage', () => {
     beforeEach(() => {
         // Clean state before each test so tests do not affect each other.
@@ -46,9 +54,18 @@ describe('SignupPage', () => {
         const user = userEvent.setup();
         renderPage();
 
-        await user.click(screen.getByRole('button', { name: 'Sign Up' }));
+        await chooseUserRole(user);
+        await user.click(screen.getByRole('button', { name: 'Sign Up as User' }));
 
         expect(screen.getByText('Please fill in all fields.')).toBeInTheDocument();
+        expect(mockSignupWithEmail).not.toHaveBeenCalled();
+    });
+
+    it('opens role modal before signup', async () => {
+        renderPage();
+
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(screen.getByText('Do you want to sign up as User or Organisor?')).toBeInTheDocument();
         expect(mockSignupWithEmail).not.toHaveBeenCalled();
     });
 
@@ -61,7 +78,8 @@ describe('SignupPage', () => {
         await user.type(screen.getByLabelText('Email'), 'alice@example.com');
         await user.type(screen.getByLabelText('Password'), '123456');
         await user.type(screen.getByLabelText('Confirm Password'), '654321');
-        await user.click(screen.getByRole('button', { name: 'Sign Up' }));
+        await chooseUserRole(user);
+        await user.click(screen.getByRole('button', { name: 'Sign Up as User' }));
 
         expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
         expect(mockSignupWithEmail).not.toHaveBeenCalled();
@@ -77,12 +95,15 @@ describe('SignupPage', () => {
         await user.type(screen.getByLabelText('Email'), 'alice@example.com');
         await user.type(screen.getByLabelText('Password'), '123456');
         await user.type(screen.getByLabelText('Confirm Password'), '123456');
-        await user.click(screen.getByRole('button', { name: 'Sign Up' }));
+        await chooseUserRole(user);
+        await user.click(screen.getByRole('button', { name: 'Sign Up as User' }));
 
         expect(mockSignupWithEmail).toHaveBeenCalledWith({
             username: 'alice',
             email: 'alice@example.com',
             password: '123456',
+            role: 'user',
+            organizerNames: [],
         });
         expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
     });
@@ -99,9 +120,56 @@ describe('SignupPage', () => {
         await user.type(screen.getByLabelText('Email'), 'alice@example.com');
         await user.type(screen.getByLabelText('Password'), '123456');
         await user.type(screen.getByLabelText('Confirm Password'), '123456');
-        await user.click(screen.getByRole('button', { name: 'Sign Up' }));
+        await chooseUserRole(user);
+        await user.click(screen.getByRole('button', { name: 'Sign Up as User' }));
 
         expect(mockMapAuthError).toHaveBeenCalledWith(error, 'signup');
         expect(screen.getByText('This email is already in use.')).toBeInTheDocument();
+    });
+
+    it('requires organizer access password when role is Organisor', async () => {
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.type(screen.getByLabelText('Username'), 'org-admin');
+        await user.type(screen.getByLabelText('Email'), 'org@example.com');
+        await user.type(screen.getByLabelText('Password'), '123456');
+        await user.type(screen.getByLabelText('Confirm Password'), '123456');
+
+        await chooseOrganizerRole(user);
+        await user.click(screen.getByRole('button', { name: 'Sign Up as Organisor' }));
+
+        expect(screen.getByText('Please enter at least one organizer access password.')).toBeInTheDocument();
+        expect(mockSignupWithEmail).not.toHaveBeenCalled();
+    });
+
+    it('allows multiple organizer codes and sends matched organizations', async () => {
+        const user = userEvent.setup();
+        mockSignupWithEmail.mockResolvedValueOnce({ uid: 'new-organizer-user' });
+        renderPage();
+
+        await user.type(screen.getByLabelText('Username'), 'org-admin');
+        await user.type(screen.getByLabelText('Email'), 'org@example.com');
+        await user.type(screen.getByLabelText('Password'), '123456');
+        await user.type(screen.getByLabelText('Confirm Password'), '123456');
+
+        await chooseOrganizerRole(user);
+
+        await user.type(screen.getByLabelText('Organizer Access Password(s)'), 'organizer-test-2026');
+
+        await user.click(screen.getByRole('button', { name: 'Add organizer code field' }));
+        const codeInputs = screen.getAllByPlaceholderText('Enter organizer access password');
+        await user.type(codeInputs[1], 'campus-events-2026');
+
+        await user.click(screen.getByRole('button', { name: 'Sign Up as Organisor' }));
+
+        expect(mockSignupWithEmail).toHaveBeenCalledWith({
+            username: 'org-admin',
+            email: 'org@example.com',
+            password: '123456',
+            role: 'organizer',
+            organizerNames: ['UniEvent Core Team', 'DTU Campus Events'],
+        });
+        expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
     });
 });

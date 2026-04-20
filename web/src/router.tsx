@@ -6,6 +6,7 @@ import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { DataDeletionPage } from './pages/DataDeletionPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 export const router = createBrowserRouter([
   {
@@ -35,5 +36,9 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    path: '/profile',
+    element: <ProfilePage />,
   },
 ]);

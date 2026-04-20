@@ -211,4 +211,3 @@ describe('auth service', () => {
         expect(mapAuthError(null)).toBe('Something went wrong. Please try again.');
     });
 });
-

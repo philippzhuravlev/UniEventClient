@@ -4,14 +4,15 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { EventList } from '../components/EventList';
 import { CalendarView } from '../components/Calendar';
 import { Footer } from '../components/Footer';
+import { HeaderLogoLink } from '../components/HeaderLogoLink';
 import { getEvents, getPages } from '../services/dal';
 import { getAuthToken, mapAuthError, signOutCurrentUser } from '../services/auth';
 import { getFacebookAuthUrl } from '../services/facebook';
 import { parseDateOnly, startOfDayMs, endOfDayMs } from '../utils/dateUtils';
 import type { Event as EventType, Page } from '../types';
 import { Link } from 'react-router-dom';
-import { CircleUserRound, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { CalendarDays, CircleUserRound, LayoutList, LogOut } from 'lucide-react';
 
 export function MainPage() {
   const { currentUser } = useAuth();
@@ -135,16 +136,16 @@ export function MainPage() {
 
   const textFiltered = debouncedQuery
     ? filteredByPage.filter((event) => {
-        const haystack = (
-          (event.title || '') +
-          ' ' +
-          (event.description || '') +
-          ' ' +
-          (event.place?.name || '')
-        ).toLowerCase();
+      const haystack = (
+        (event.title || '') +
+        ' ' +
+        (event.description || '') +
+        ' ' +
+        (event.place?.name || '')
+      ).toLowerCase();
 
-        return haystack.includes(debouncedQuery);
-      })
+      return haystack.includes(debouncedQuery);
+    })
     : filteredByPage;
 
   const fromObj = parseDateOnly(fromDate);
@@ -160,13 +161,15 @@ export function MainPage() {
   });
 
   const getCreatedMs = (e: EventType) => {
+    type LegacyEvent = EventType & { createdTime?: string; postedTime?: string; insertedAt?: string; addedAt?: string };
+    const le = e as LegacyEvent;
     const maybe =
-      (e as any).createdTime ??
-      (e as any).createdAt ??
-      (e as any).postedTime ??
-      (e as any).insertedAt ??
-      (e as any).addedAt ??
-      e.startTime;
+      le.createdTime ??
+      le.createdAt ??
+      le.postedTime ??
+      le.insertedAt ??
+      le.addedAt ??
+      le.startTime;
 
     const ms = Date.parse(maybe);
     return isNaN(ms) ? new Date(e.startTime).getTime() : ms;
@@ -193,29 +196,26 @@ export function MainPage() {
     <div className="min-h-screen flex flex-col">
       <header className="page-header mx-6 md:mx-8 mt-4 md:mt-6 mb-6">
         <div className="header-content">
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/dtuevent-8105b.firebasestorage.app/o/picture%2Fdtulogo.png?alt=media&token=7e86de6e-f1f4-471d-8354-70ad70bafe14"
-            alt="DTU Logo"
-            className="header-logo"
-          />
+          <HeaderLogoLink />
           <div className="header-text">
-            <h1 className="header-title">DTU Events</h1>
-            <p className="header-subtitle">Discover Technical University of Denmark Events</p>
+            <h1 className="header-title main-header-title">DTU Events</h1>
+            <p className="header-subtitle main-header-subtitle">Discover Technical University of Denmark Events</p>
           </div>
         </div>
 
-        <div className="header-toggle relative flex items-center gap-2">
+        <div className="header-toggle relative flex items-center gap-2 rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-2 py-1.5 shadow-sm">
+          <ThemeToggle />
+
           {currentUser ? (
             <div className="relative" ref={profileMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsProfileOpen((open) => !open)}
-                className="inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] sm:px-4 sm:text-sm"
-                aria-label="Open profile menu"
+                className="inline-flex items-center justify-center rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--input-focus-border)]"
+                aria-label="Open account menu"
                 aria-expanded={isProfileOpen}
               >
                 <CircleUserRound size={18} />
-                <span className="hidden sm:inline">Profile</span>
               </button>
 
               {isProfileOpen && (
@@ -226,14 +226,22 @@ export function MainPage() {
                   <p className="truncate px-2 pb-2 text-sm font-semibold text-[var(--text-primary)]">
                     {userLabel}
                   </p>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)]"
+                  >
+                    <CircleUserRound size={16} />
+                    Profile
+                  </Link>
                   <button
                     type="button"
                     onClick={handleSignOut}
                     disabled={isSigningOut}
-                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <LogOut size={16} />
-                    {isSigningOut ? 'Signing out...' : 'Sign out'}
+                    {isSigningOut ? 'Signing out...' : 'Log out'}
                   </button>
                 </div>
               )}
@@ -247,8 +255,6 @@ export function MainPage() {
               Log In / Sign Up
             </Link>
           )}
-
-          <ThemeToggle />
         </div>
       </header>
 
@@ -283,34 +289,40 @@ export function MainPage() {
             </p>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-            <div className="text-sm text-[var(--text-subtle)]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-xl border border-[var(--panel-border)] bg-[var(--panel-bg)] px-4 py-3 gap-3">
+            <div className="text-sm font-medium text-[var(--text-subtle)]" aria-live="polite">
               {count} event{count === 1 ? '' : 's'} found
             </div>
 
-            <div className="flex gap-2">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--input-bg)] p-1">
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${
-                  viewMode === 'list'
-                    ? 'bg-[var(--link-primary)] text-white border-transparent'
-                    : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
-                }`}
+                aria-pressed={viewMode === 'list'}
+                className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${viewMode === 'list'
+                  ? 'bg-[var(--link-primary)] text-white border-transparent'
+                  : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
+                  }`}
               >
-                List
+                <span className="inline-flex items-center gap-2">
+                  <LayoutList size={16} />
+                  List
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setViewMode('calendar')}
-                className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${
-                  viewMode === 'calendar'
-                    ? 'bg-[var(--link-primary)] text-white border-transparent'
-                    : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
-                }`}
+                aria-pressed={viewMode === 'calendar'}
+                className={`px-4 py-2 rounded-lg border text-sm font-semibold transition ${viewMode === 'calendar'
+                  ? 'bg-[var(--link-primary)] text-white border-transparent'
+                  : 'bg-[var(--panel-bg)] text-[var(--text-primary)] border-[var(--panel-border)] hover:bg-[var(--input-bg)]'
+                  }`}
               >
-                Calendar
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays size={16} />
+                  Calendar
+                </span>
               </button>
             </div>
           </div>

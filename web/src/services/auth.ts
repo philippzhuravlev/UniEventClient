@@ -8,10 +8,14 @@ export type AuthUser = {
     token: string;
 };
 
+export type AccountRole = 'user' | 'organizer';
+
 type SignupInput = {
     username: string;
     email: string;
     password: string;
+    role?: AccountRole;
+    organizerNames?: string[];
 };
 
 type AuthErrorContext = 'login' | 'signup' | 'general';
@@ -68,11 +72,11 @@ export async function loginWithEmail(email: string, password: string): Promise<A
     return user;
 }
 
-export async function signupWithEmail({ username, email, password }: SignupInput): Promise<AuthUser> {
+export async function signupWithEmail({ username, email, password, role, organizerNames }: SignupInput): Promise<AuthUser> {
     const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, role, organizerNames }),
     });
 
     if (!response.ok) {
@@ -102,7 +106,8 @@ export async function signOutCurrentUser(): Promise<void> {
     notifyListeners(null);
 }
 
-export function mapAuthError(error: unknown, _context: AuthErrorContext = 'general'): string {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function mapAuthError(error: unknown, _context?: AuthErrorContext): string {
     if (error && typeof error === 'object') {
         const e = error as { status?: number; message?: string };
         if (e.status === 401 || e.status === 403) {

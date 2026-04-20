@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { HeaderLogoLink } from '../components/HeaderLogoLink';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
 import { LogIn, UserPlus } from 'lucide-react';
@@ -49,11 +50,7 @@ export function LoginPage() {
         <div className="min-h-screen flex flex-col">
             <header className="page-header mx-6 md:mx-8 mt-4 md:mt-6 mb-8">
                 <div className="header-content">
-                    <img
-                        src="https://firebasestorage.googleapis.com/v0/b/dtuevent-8105b.firebasestorage.app/o/picture%2Fdtulogo.png?alt=media&token=7e86de6e-f1f4-471d-8354-70ad70bafe14"
-                        alt="DTU Logo"
-                        className="header-logo"
-                    />
+                    <HeaderLogoLink />
                     <div className="header-text">
                         <h1 className="header-title">Welcome Back</h1>
                         <p className="header-subtitle">Log in to continue your DTU Events experience</p>

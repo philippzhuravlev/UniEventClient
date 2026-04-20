@@ -68,6 +68,7 @@ Or "TonkaProductions". Note that all contribute code.
 - Event moderation and approval system
 - Analytics dashboard for event engagement
 - Notification system for page admins (event sync status, token expiration)
+- Like function for users to like their favorite events
 
 ## List
 
