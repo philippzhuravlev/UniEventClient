@@ -57,7 +57,7 @@ describe('auth service', () => {
 
         const user = await loginWithEmail('alice@example.com', 'secret123');
 
-        expect(user).toEqual({ token: 'tok-1', username: 'alice', email: 'alice@example.com' });
+        expect(user).toMatchObject({ token: 'tok-1', username: 'alice', email: 'alice@example.com' });
         expect(localStorage.getItem('unievent_token')).toBe('tok-1');
         expect(getAuthToken()).toBe('tok-1');
     });
@@ -85,7 +85,7 @@ describe('auth service', () => {
 
         const user = await signupWithEmail({ username: 'bob', email: 'bob@example.com', password: 'secret123' });
 
-        expect(user).toEqual({ token: 'tok-2', username: 'bob', email: 'bob@example.com' });
+        expect(user).toMatchObject({ token: 'tok-2', username: 'bob', email: 'bob@example.com' });
         expect(localStorage.getItem('unievent_token')).toBe('tok-2');
     });
 
@@ -116,7 +116,7 @@ describe('auth service', () => {
         mockFetch.mockResolvedValueOnce(jsonResponse({ token: 'tok-3', username: 'carol', email: 'carol@x.com' }));
         await loginWithEmail('carol@x.com', 'pw');
 
-        expect(getCurrentUser()).toEqual({ token: 'tok-3', username: 'carol', email: 'carol@x.com' });
+        expect(getCurrentUser()).toMatchObject({ token: 'tok-3', username: 'carol', email: 'carol@x.com' });
     });
 
     // ── onAuthUserChanged ────────────────────────────────────────────────────
@@ -150,7 +150,7 @@ describe('auth service', () => {
 
         await loginWithEmail('eve@x.com', 'pw');
 
-        expect(callback).toHaveBeenCalledWith({ token: 't', username: 'eve', email: 'eve@x.com' });
+        expect(callback).toHaveBeenCalledWith(expect.objectContaining({ token: 't', username: 'eve', email: 'eve@x.com' }));
         unsubscribe();
     });
 

@@ -6,6 +6,9 @@ export type AuthUser = {
     username: string;
     email: string;
     token: string;
+    uid?: string;
+    displayName?: string;
+    photoURL?: string | null;
 };
 
 export type AccountRole = 'user' | 'organizer';
@@ -43,7 +46,7 @@ export function getCurrentUser(): AuthUser | null {
     if (!token || !raw) return null;
     try {
         const { username, email } = JSON.parse(raw) as { username: string; email: string };
-        return { username, email, token };
+        return { username, email, token, uid: username, displayName: username };
     } catch {
         return null;
     }
@@ -66,7 +69,7 @@ export async function loginWithEmail(email: string, password: string): Promise<A
     }
 
     const data = await response.json() as { token: string; username: string; email: string };
-    const user: AuthUser = { token: data.token, username: data.username, email: data.email };
+    const user: AuthUser = { token: data.token, username: data.username, email: data.email, uid: data.username, displayName: data.username };
     persistUser(user);
     notifyListeners(user);
     return user;
@@ -85,7 +88,7 @@ export async function signupWithEmail({ username, email, password, role, organiz
     }
 
     const data = await response.json() as { token: string; username: string; email: string };
-    const user: AuthUser = { token: data.token, username: data.username, email: data.email };
+    const user: AuthUser = { token: data.token, username: data.username, email: data.email, uid: data.username, displayName: data.username };
     persistUser(user);
     notifyListeners(user);
     return user;
@@ -104,6 +107,18 @@ export function onAuthUserChanged(callback: (user: AuthUser | null) => void): ()
 export async function signOutCurrentUser(): Promise<void> {
     clearUser();
     notifyListeners(null);
+}
+
+export function getStoredAccountRole(_uid: string): AccountRole {
+    return 'user';
+}
+
+export function getStoredOrganizerNames(_uid: string): string[] {
+    return [];
+}
+
+export async function getAccountProfile(_uid?: string): Promise<{ role: AccountRole; organizerNames: string[] }> {
+    return { role: 'user', organizerNames: [] };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
