@@ -63,7 +63,9 @@ export function useFilterBar(events: EventType[]) {
   // pick a created/added timestamp from an event (ms)
   const getCreatedMs = (e: EventType) => { // for each event we 
     // pick the first available "created/added" timestamp field and fallback to startTime if none exist
-    const maybe = (e as any).createdTime ?? (e as any).createdAt ?? (e as any).postedTime ?? (e as any).insertedAt ?? (e as any).addedAt ?? e.startTime;
+    type LegacyEvent = EventType & { createdTime?: string; postedTime?: string; insertedAt?: string; addedAt?: string };
+    const le = e as LegacyEvent;
+    const maybe = le.createdTime ?? le.createdAt ?? le.postedTime ?? le.insertedAt ?? le.addedAt ?? le.startTime;
     const ms = Date.parse(maybe); // parse maybe into ms
     return isNaN(ms) ? new Date(e.startTime).getTime() : ms; // fallback to startTime if parsing fails
   };

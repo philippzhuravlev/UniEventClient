@@ -1,54 +1,57 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildFacebookLoginUrl } from '../../services/facebook';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getFacebookAuthUrl } from '../../services/facebook';
+
+const mockFetch = vi.fn();
+
+beforeEach(() => {
+    vi.stubGlobal('fetch', mockFetch);
+});
 
 afterEach(() => {
-    // Reset environment changes so tests do not affect each other.
+    vi.unstubAllGlobals();
     vi.unstubAllEnvs();
 });
 
-describe('facebook service', () => {
-    it('builds a Facebook OAuth URL with required parts', () => {
-        // Checks the generated login URL includes all mandatory OAuth pieces.
-        const url = buildFacebookLoginUrl();
+function jsonResponse(body: unknown, status = 200) {
+    return Promise.resolve({
+        ok: status >= 200 && status < 300,
+        status,
+        json: () => Promise.resolve(body),
+    });
+}
 
-        expect(url).toContain('https://www.facebook.com/v23.0/dialog/oauth');
-        expect(url).toContain('client_id=');
-        expect(url).toContain('redirect_uri=https%3A%2F%2Feurope-west1-dtuevent-8105b.cloudfunctions.net%2FhandleCallback');
-        expect(url).toContain('scope=pages_show_list,pages_read_engagement');
+describe('getFacebookAuthUrl', () => {
+    it('calls /api/facebook/auth with Bearer token and returns url', async () => {
+        const expectedUrl = 'https://www.facebook.com/dialog/oauth?client_id=123&state=abc';
+        mockFetch.mockReturnValueOnce(jsonResponse({ url: expectedUrl, state: 'abc' }));
+
+        const result = await getFacebookAuthUrl('my-jwt');
+
+        expect(mockFetch).toHaveBeenCalledWith(
+            expect.stringContaining('/api/facebook/auth'),
+            expect.objectContaining({ headers: { Authorization: 'Bearer my-jwt' } })
+        );
+        expect(result).toBe(expectedUrl);
     });
 
-    it('uses VITE_FACEBOOK_APP_ID as dynamic client_id', () => {
-        // Checks the URL uses the current env value, not a hardcoded client id.
-        vi.stubEnv('VITE_FACEBOOK_APP_ID', 'my-test-app-id');
+    it('hits the /api/facebook/auth endpoint', async () => {
+        mockFetch.mockReturnValueOnce(jsonResponse({ url: 'https://fb.com/auth', state: 'x' }));
 
-        const url = buildFacebookLoginUrl();
+        await getFacebookAuthUrl('tok');
 
-        expect(url).toContain('client_id=my-test-app-id');
+        const calledUrl: string = mockFetch.mock.calls[0][0] as string;
+        expect(calledUrl).toMatch(/\/api\/facebook\/auth$/);
     });
 
-    it('encodes redirect_uri correctly', () => {
-        // Checks redirect URL is URL-encoded so Facebook receives it safely.
-        const url = buildFacebookLoginUrl();
-        const parsed = new URL(url);
-        const encodedRedirect = parsed.searchParams.get('redirect_uri');
+    it('throws when the backend returns a non-ok response', async () => {
+        mockFetch.mockReturnValueOnce(jsonResponse({ message: 'Unauthorized' }, 401));
 
-        expect(encodedRedirect).toBe('https://europe-west1-dtuevent-8105b.cloudfunctions.net/handleCallback');
+        await expect(getFacebookAuthUrl('bad-token')).rejects.toThrow('Unauthorized');
     });
 
-    it('keeps scope list in expected comma format', () => {
-        // Checks scope permissions are included exactly as expected.
-        const url = buildFacebookLoginUrl();
-        const parsed = new URL(url);
+    it('throws a generic message when backend error has no message field', async () => {
+        mockFetch.mockReturnValueOnce(jsonResponse({}, 500));
 
-        expect(parsed.searchParams.get('scope')).toBe('pages_show_list,pages_read_engagement');
-    });
-
-    it('shows undefined client_id when env is missing', () => {
-        // Checks current behavior when env is missing so failures are easy to spot.
-        vi.stubEnv('VITE_FACEBOOK_APP_ID', '');
-
-        const url = buildFacebookLoginUrl();
-
-        expect(url).toContain('client_id=');
+        await expect(getFacebookAuthUrl('tok')).rejects.toThrow('Failed to get Facebook auth URL');
     });
 });

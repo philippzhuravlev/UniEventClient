@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { HeaderLogoLink } from '../components/HeaderLogoLink';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { Facebook, LogIn, UserPlus } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { loginWithEmail, mapAuthError } from '../services/auth';
 import '../styles/LoginPage.css';
 
@@ -71,7 +71,7 @@ export function LoginPage() {
                             <p className="login-eyebrow">AUTHENTICATION</p>
                             <h2 className="login-title">Sign in to your account</h2>
                             <p className="login-description">Enter your email and password to continue.</p>
-                            <p className="login-helper">No account yet? Use Sign Up or Sign Up / Log In with Facebook.</p>
+                            <p className="login-helper">No account yet? Use the Sign Up link below.</p>
 
                             <form className="login-form" onSubmit={handleSubmit} noValidate>
                                 <label className="login-label" htmlFor="email">Email</label>
@@ -110,11 +110,6 @@ export function LoginPage() {
                                         <UserPlus size={18} />
                                         Sign Up
                                     </Link>
-
-                                    <button type="button" className="login-btn login-btn-facebook" disabled={isLoading}>
-                                        <Facebook size={22} strokeWidth={2.35} />
-                                        Sign Up / Log In with Facebook
-                                    </button>
                                 </div>
                             </form>
 

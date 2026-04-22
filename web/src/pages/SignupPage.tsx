@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { HeaderLogoLink } from '../components/HeaderLogoLink';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { Facebook, Plus, UserPlus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { mapAuthError, signupWithEmail, type AccountRole } from '../services/auth';
 import '../styles/SignupPage.css';
 
@@ -234,16 +234,7 @@ export function SignupPage() {
                                         {isLoading ? 'Signing Up...' : accountRole ? `Sign Up as ${accountRole === 'organizer' ? 'Organisor' : 'User'}` : 'Sign Up'}
                                     </button>
 
-                                    <button
-                                        type="button"
-                                        className="signup-btn signup-btn-facebook"
-                                        disabled
-                                        aria-disabled="true"
-                                        title="Facebook sign up is not available yet"
-                                    >
-                                        <Facebook size={22} strokeWidth={2.35} />
-                                        Facebook Sign Up Coming Soon
-                                    </button>
+
                                 </div>
                             </form>
 
