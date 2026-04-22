@@ -256,8 +256,14 @@ export function SignupPage() {
                 </section>
 
                 {isRoleModalOpen && (
-                    <div className="signup-role-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="signup-role-modal-title">
-                        <div className="signup-role-modal">
+                    <div
+                        className="signup-role-modal-overlay"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="signup-role-modal-title"
+                        onClick={() => navigate('/login', { replace: true })}
+                    >
+                        <div className="signup-role-modal" onClick={(event) => event.stopPropagation()}>
                             <h3 id="signup-role-modal-title" className="signup-role-modal-title">Choose account type</h3>
                             <p className="signup-role-modal-text">Do you want to sign up as User or Organisor?</p>
 

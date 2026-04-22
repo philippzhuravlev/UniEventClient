@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import type { Event, Page } from '../types';
 import { getEventById, getPages } from '../services/dal';
-import { formatEventStart } from '../utils/eventUtils';
+import { DEFAULT_EVENT_COVER_IMAGE_URL, formatEventStart, getEventCoverImageUrl } from '../utils/eventUtils';
 import { downloadIcs, buildGoogleCalendarUrl } from '../utils/calendarUtils';
 import { LikeButton } from '../components/LikeButton';
 import { HeaderLogoLink } from '../components/HeaderLogoLink';
@@ -137,6 +137,7 @@ export function EventPage() {
   };
 
   const organizerName = getOrganizerName(event, pages);
+  const coverImageUrl = getEventCoverImageUrl(event?.coverImageUrl);
 
   // Main Rendering of EventPage
   return (
@@ -296,9 +297,12 @@ export function EventPage() {
               <section className="mb-6 overflow-hidden rounded-2xl border border-[var(--panel-border)] shadow-lg">
                 <div className="relative w-full h-[46vh] min-h-[260px]">
                   <img
-                    src={event.coverImageUrl ?? ''}
+                    src={coverImageUrl}
                     alt={event.title}
                     className="w-full h-full object-cover"
+                    onError={(imageEvent) => {
+                      imageEvent.currentTarget.src = DEFAULT_EVENT_COVER_IMAGE_URL;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5">

@@ -69,6 +69,24 @@ describe('SignupPage', () => {
         expect(mockSignupWithEmail).not.toHaveBeenCalled();
     });
 
+    it('navigates to login when clicking outside role modal', async () => {
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.click(screen.getByRole('dialog'));
+
+        expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+    });
+
+    it('does not navigate when clicking inside role modal content', async () => {
+        const user = userEvent.setup();
+        renderPage();
+
+        await user.click(screen.getByText('Do you want to sign up as User or Organisor?'));
+
+        expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
     it('shows an error when password and confirm password differ', async () => {
         // Simple check: both password fields must match.
         const user = userEvent.setup();

@@ -1,5 +1,5 @@
 import type { Event } from '../types';
-import { formatEventStart } from '../utils/eventUtils';
+import { DEFAULT_EVENT_COVER_IMAGE_URL, formatEventStart, getEventCoverImageUrl } from '../utils/eventUtils';
 import { useEventCard } from '../hooks/useEventCard';
 import { FacebookLinkButton } from './FacebookLinkButton';
 import { LikeButton } from './LikeButton';
@@ -14,6 +14,7 @@ export function EventCard({ event }: { event: Event }) {
 
   const descriptionRef = useRef<HTMLDivElement>(null);
   const [hasMoreDescription, setHasMoreDescription] = useState(false);
+  const coverImageUrl = getEventCoverImageUrl(event.coverImageUrl);
 
   // check if description has more content than shown in collapsed state (exceeds 3 lines)
   useEffect(() => {
@@ -72,10 +73,14 @@ export function EventCard({ event }: { event: Event }) {
 
         {/* layout: image + text column */}
         <div className="flex flex-col gap-4 flex-1">
-          {/* gets the optional image or just prints the event title */}
-          {event.coverImageUrl && (
-            <img src={event.coverImageUrl} alt={event.title} className="w-full h-48 object-cover rounded-xl shadow-md transition-transform duration-300" />
-          )}
+          <img
+            src={coverImageUrl}
+            alt={event.title}
+            className="w-full h-48 object-cover rounded-xl shadow-md transition-transform duration-300"
+            onError={(imageEvent) => {
+              imageEvent.currentTarget.src = DEFAULT_EVENT_COVER_IMAGE_URL;
+            }}
+          />
           {/* text column */}
           <div className="min-w-0 flex-1 px-4">
             <div className="font-bold text-lg text-[var(--text-primary)] truncate">{event.title}</div>
