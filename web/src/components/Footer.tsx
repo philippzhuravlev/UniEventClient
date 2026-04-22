@@ -12,6 +12,12 @@ export function Footer() {
             <p className="text-sm text-[var(--text-subtle)]">
               A unified calendar for DTU campus events
             </p>
+            <Link
+              to="/become-organizer"
+              className="mt-2 inline-flex text-sm font-semibold text-[var(--link-primary)] hover:text-[var(--link-primary-hover)] transition-colors"
+            >
+              Become an organizer
+            </Link>
           </div>
 
           {/* Legal */}

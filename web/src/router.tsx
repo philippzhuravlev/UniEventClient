@@ -8,6 +8,8 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ManualEventPage } from './pages/ManualEventPage';
+import { BecomeOrganizerPage } from './pages/BecomeOrganizerPage';
+import { OrganizerRegisterPage } from './pages/OrganizerRegisterPage';
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +39,14 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    path: '/become-organizer',
+    element: <BecomeOrganizerPage />,
+  },
+  {
+    path: '/organizer-register',
+    element: <OrganizerRegisterPage />,
   },
   {
     path: '/profile',
