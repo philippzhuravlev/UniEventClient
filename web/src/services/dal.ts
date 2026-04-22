@@ -1,87 +1,274 @@
-import type { Event, Page } from '../types';
-import { events as mockEvents, pages as mockPages } from '../data/mock';
+/**
+ * Data Access Layer (DAL)
+ * 
+ * Communicates with the UniEventServer backend at /api/events, /api/pages, etc.
+ * Replaces Firebase Firestore calls with REST API calls.
+ */
 
-// Data Access Layer (client-side). Today: returns mock data asynchronously.
-// Later: swap implementation to call Firestore / API.
+import type { Event, Page, Place } from '../types';
 
-function isFirestoreEnabled(): boolean {
-  return import.meta.env.VITE_USE_FIRESTORE?.toLowerCase() === 'true';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? '';
+
+function buildBackendUrl(path: string): URL {
+  return new URL(path, BACKEND_URL || window.location.origin);
 }
 
-export async function getPages(): Promise<Page[]> {
-  if (!isFirestoreEnabled()) {
-    await new Promise(r => setTimeout(r, 100));
-    return mockPages;
-  }
-  const { db } = await import('./firebase');
-  const { collection, getDocs } = await import('firebase/firestore');
-  const snap = await getDocs(collection(db, 'pages'));
-  return snap.docs.map(d => {
-    const data = d.data() as any;
-    return {
-      id: d.id,
-      name: data.name,
-      url: data.url,
-      active: !!data.active,
-    } satisfies Page;
-  });
+function buildBackendUrlString(path: string): string {
+  return buildBackendUrl(path).toString();
 }
 
-function toIso(value: any | undefined): string | undefined {
-  if (!value) return undefined;
-  return typeof value.toDate === 'function' ? value.toDate().toISOString() : value;
+interface ApiResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
 
-export async function getEvents(): Promise<Event[]> {
-  if (!isFirestoreEnabled()) {
-    await new Promise(r => setTimeout(r, 150));
-    return mockEvents;
-  }
-  const { db } = await import('./firebase');
-  const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
-  const q = query(collection(db, 'events'), orderBy('startTime'));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => {
-    const data = d.data() as any;
-    return {
-      id: d.id,
-      pageId: data.pageId,
-      title: data.title,
-      description: data.description,
-      startTime: toIso(data.startTime) as string,
-      endTime: toIso(data.endTime),
-      place: data.place,
-      coverImageUrl: data.coverImageUrl,
-      eventURL: data.eventURL,
-      createdAt: toIso(data.createdAt) as string,
-      updatedAt: toIso(data.updatedAt) as string,
-    } satisfies Event;
-  });
+interface EventApiResponse {
+  id: string;
+  pageId: string;
+  title: string;
+  description?: string;
+  startTime: string; // ISO format
+  endTime?: string; // ISO format
+  place?: Place;
+  coverImageId?: number;
+  eventUrl?: string;
+  createdAt: string; // ISO format
+  updatedAt: string; // ISO format
 }
 
-export async function getEventById(id: string): Promise<Event | null> {
-  // pull from firebase
-  const { db } = await import('./firebase'); // actual db instance
-  const { doc, getDoc } = await import('firebase/firestore'); // document
-  const snap = await getDoc(doc(db, 'events', id)); // snapshot of document
-  if (!snap.exists()) { // if document does not exist
-    return null;
-  }
-  const data = snap.data() as any; // get data from snapshot
-  
-  // Type checking
-  // map data onto Event (which is an object from types.ts)
+interface PageApiResponse {
+  id: string;
+  name: string;
+  url: string;
+  active: boolean;
+  pictureId?: number;
+}
+
+/**
+ * Map backend EventApiResponse to frontend Event type
+ */
+function mapEventResponse(data: EventApiResponse): Event {
   return {
-    id: snap.id,
+    id: data.id,
     pageId: data.pageId,
     title: data.title,
     description: data.description,
-    startTime: toIso(data.startTime) as string,
-    endTime: toIso(data.endTime),
+    startTime: data.startTime,
+    endTime: data.endTime,
     place: data.place,
-    coverImageUrl: data.coverImageUrl,
-    eventURL: data.eventURL,
-    createdAt: toIso(data.createdAt) as string,
-    updatedAt: toIso(data.updatedAt) as string,
-  } satisfies Event; // "satisfies" = typescript keyword that checks if object matches type
+    coverImageUrl: data.coverImageId ? buildBackendUrlString(`/media/${data.coverImageId}`) : undefined,
+    eventURL: data.eventUrl,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+}
+
+/**
+ * Map backend PageApiResponse to frontend Page type
+ */
+function mapPageResponse(data: PageApiResponse): Page {
+  return {
+    id: data.id,
+    name: data.name,
+    url: data.url,
+    active: data.active,
+  };
+}
+
+async function createFetchError(response: Response, context: string): Promise<Error> {
+  const statusDetails = response.statusText
+    ? `${response.status} ${response.statusText}`
+    : `${response.status}`;
+
+  let message = `${context}: ${statusDetails}`;
+
+  try {
+    const bodyText = await response.text();
+
+    if (bodyText) {
+      try {
+        const parsed: unknown = JSON.parse(bodyText);
+        if (
+          typeof parsed === 'object' &&
+          parsed !== null &&
+          'message' in parsed &&
+          typeof parsed.message === 'string' &&
+          parsed.message.trim() !== ''
+        ) {
+          message = `${message} - ${parsed.message}`;
+        } else if (bodyText.trim() !== '') {
+          message = `${message} - ${bodyText}`;
+        }
+      } catch {
+        if (bodyText.trim() !== '') {
+          message = `${message} - ${bodyText}`;
+        }
+      }
+    }
+  } catch {
+    // Ignore body parsing failures and fall back to status-based message.
+  }
+
+  return new Error(message);
+}
+
+/**
+ * Fetch all pages (paginated, defaults to first 100)
+ */
+export async function getPages(page: number = 0, size: number = 100): Promise<Page[]> {
+  const url = buildBackendUrl('/api/pages');
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw await createFetchError(response, 'Failed to fetch pages');
+  }
+
+  const data: ApiResponse<PageApiResponse> = await response.json();
+  return data.content.map(mapPageResponse);
+}
+
+/**
+ * Fetch active pages only (paginated)
+ */
+export async function getActivePages(page: number = 0, size: number = 100): Promise<Page[]> {
+  const url = buildBackendUrl('/api/pages/active');
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw await createFetchError(response, 'Failed to fetch active pages');
+  }
+
+  const data: ApiResponse<PageApiResponse> = await response.json();
+  return data.content.map(mapPageResponse);
+}
+
+/**
+ * Search pages by name (case-insensitive, paginated)
+ */
+export async function searchPages(query: string, page: number = 0, size: number = 100): Promise<Page[]> {
+  const url = new URL(`${BACKEND_URL}/api/pages/search`);
+  url.searchParams.append('name', query);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to search pages: ${response.statusText}`);
+  }
+
+  const data: ApiResponse<PageApiResponse> = await response.json();
+  return data.content.map(mapPageResponse);
+}
+
+/**
+ * Fetch all events (paginated, defaults to first 100, sorted by startTime)
+ */
+export async function getEvents(page: number = 0, size: number = 100): Promise<Event[]> {
+  const url = new URL(`${BACKEND_URL}/api/events`);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+  url.searchParams.append('sort', 'startTime,asc');
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch events: ${response.statusText}`);
+  }
+
+  const data: ApiResponse<EventApiResponse> = await response.json();
+  return data.content.map(mapEventResponse);
+}
+
+/**
+ * Fetch upcoming events only (startTime >= now, paginated)
+ */
+export async function getFutureEvents(page: number = 0, size: number = 100): Promise<Event[]> {
+  const url = buildBackendUrl('/api/events/future');
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch future events: ${response.statusText}`);
+  }
+
+  const data: ApiResponse<EventApiResponse> = await response.json();
+  return data.content.map(mapEventResponse);
+}
+
+/**
+ * Fetch a single event by ID
+ */
+export async function getEventById(id: string): Promise<Event | null> {
+  const url = `${BACKEND_URL}/api/events/${id}`;
+
+  const response = await fetch(url);
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to fetch event: ${response.statusText}`);
+  }
+
+  const data: EventApiResponse = await response.json();
+  return mapEventResponse(data);
+}
+
+/**
+ * Fetch events for a specific page/organizer
+ */
+export async function getEventsByPageId(pageId: string, page: number = 0, size: number = 100): Promise<Event[]> {
+  const url = buildBackendUrl(`/api/events/page/${pageId}`);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch events for page: ${response.statusText}`);
+  }
+
+  const data: ApiResponse<EventApiResponse> = await response.json();
+  return data.content.map(mapEventResponse);
+}
+
+/**
+ * Fetch future events for a specific page/organizer
+ */
+export async function getFutureEventsByPageId(pageId: string, page: number = 0, size: number = 100): Promise<Event[]> {
+  const url = new URL(`${BACKEND_URL}/api/events/page/${pageId}/future`);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch future events for page: ${response.statusText}`);
+  }
+
+  const data: ApiResponse<EventApiResponse> = await response.json();
+  return data.content.map(mapEventResponse);
+}
+
+/**
+ * Fetch events for a specific place/venue
+ */
+export async function getEventsByPlaceId(placeId: string, page: number = 0, size: number = 100): Promise<Event[]> {
+  const url = new URL(`${BACKEND_URL}/api/events/place/${placeId}`);
+  url.searchParams.append('page', page.toString());
+  url.searchParams.append('size', size.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch events for place: ${response.statusText}`);
+  }
+
+  const data: ApiResponse<EventApiResponse> = await response.json();
+  return data.content.map(mapEventResponse);
 }
