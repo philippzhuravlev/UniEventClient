@@ -43,7 +43,7 @@ function buildDepsFromParams() {
 		process.env.FB_REDIRECT_URI = FB_REDIRECT_URI_PARAM.value();
 		process.env.GCP_PROJECT_ID = GCP_PROJECT_ID_PARAM.value();
 	} catch (e) {
-		// value() may throw in some contexts (e.g. during local TS type checks) — fall back to existing env
+		// value() may throw in some contexts (e.g. during local TS type checks) - fall back to existing env
 	}
 
 	const facebookService = new FacebookService();
@@ -54,7 +54,7 @@ function buildDepsFromParams() {
 	return { facebookService, secretManagerService, storageService, firestoreService } as const;
 }
 
-// Exports: thin Firebase wrappers only — handlers contain the business logic.
+// Exports: thin Firebase wrappers only - handlers contain the business logic.
 // Note: wrappers intentionally avoid heavy logic; they build `deps` and pass
 // control to the handler implementations in `src/handlers`.
 export const handleCallback = onRequest({ secrets: [FACEBOOK_APP_SECRET] }, async (req, res) => {

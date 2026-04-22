@@ -1,37 +1,19 @@
-import { FirebaseError } from 'firebase/app';
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile, type User } from 'firebase/auth';
-import { db, getAuthInstance } from './firebase';
-import type { FieldValue, Timestamp } from 'firebase/firestore';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? '';
+const TOKEN_KEY = 'unievent_token';
+const USER_KEY = 'unievent_user';
 
-function isFirestoreEnabled(): boolean {
-    return import.meta.env.VITE_USE_FIRESTORE?.toLowerCase() === 'true';
-}
-
-const USER_LIKES_COLLECTION = 'users';
-
-export type AuthUser = User;
-type AuthErrorContext = 'login' | 'signup' | 'general';
-export type AccountRole = 'user' | 'organizer';
-
-export type UserDto = {
-    uid: string;
-    name: string;
+export type AuthUser = {
+    username: string;
     email: string;
-    organizer: boolean;
-    /** @deprecated Legacy misspelled field kept temporarily for backward compatibility with older Firestore documents. */
-    orgenizer?: boolean;
+    token: string;
+    uid?: string;
+    displayName?: string;
+    photoURL?: string | null;
     role?: AccountRole;
-    createdAt: Timestamp | null;
-    likedItemIds: string[];
     organizerNames?: string[];
 };
 
-export type AccountProfile = {
-    role: AccountRole;
-    organizerNames: string[];
-};
-
-const accountProfileCache = new Map<string, AccountProfile>();
+export type AccountRole = 'user' | 'organizer';
 
 type SignupInput = {
     username: string;
@@ -41,167 +23,183 @@ type SignupInput = {
     organizerNames?: string[];
 };
 
-function normalizeAccountRole(value: unknown): AccountRole {
-    return value === 'organizer' ? 'organizer' : 'user';
+type AuthErrorContext = 'login' | 'signup' | 'general';
+
+type HttpError = Error & { status: number };
+
+function createHttpError(status: number, message: string): HttpError {
+    return Object.assign(new Error(message), { status });
 }
 
-function normalizeOrganizerNames(value: unknown): string[] {
-    if (!Array.isArray(value)) {
-        return [];
+// Module-level listener list for auth state subscriptions
+const listeners: Array<(user: AuthUser | null) => void> = [];
+
+function notifyListeners(user: AuthUser | null): void {
+    listeners.forEach((cb) => cb(user));
+}
+
+function persistUser(user: AuthUser): void {
+    localStorage.setItem(TOKEN_KEY, user.token);
+    localStorage.setItem(USER_KEY, JSON.stringify({ username: user.username, email: user.email }));
+}
+
+function clearUser(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+}
+
+export function getCurrentUser(): AuthUser | null {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const raw = localStorage.getItem(USER_KEY);
+    if (!token || !raw) return null;
+    try {
+        const { username, email } = JSON.parse(raw) as { username: string; email: string };
+        return { username, email, token, uid: username, displayName: username };
+    } catch {
+        return null;
+    }
+}
+
+export function getAuthToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+}
+
+export async function loginWithEmail(email: string, password: string): Promise<AuthUser> {
+    const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+        throw createHttpError(
+            response.status,
+            (body['message'] as string | undefined) ?? response.statusText,
+        );
     }
 
-    return value
-        .map((name) => (typeof name === 'string' ? name.trim() : ''))
-        .filter((name): name is string => !!name);
+    const data = await response.json() as { token: string; username: string; email: string };
+    const user: AuthUser = { token: data.token, username: data.username, email: data.email, uid: data.username, displayName: data.username };
+    persistUser(user);
+    notifyListeners(user);
+    return user;
 }
 
-function buildProfilePayload(role: unknown, organizerNames: unknown): AccountProfile {
-    return {
-        role: normalizeAccountRole(role),
-        organizerNames: normalizeOrganizerNames(organizerNames),
+export async function signupWithEmail({ username, email, password, role, organizerNames }: SignupInput): Promise<AuthUser> {
+    const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, role, organizerNames }),
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+        throw createHttpError(
+            response.status,
+            (body['message'] as string | undefined) ?? response.statusText,
+        );
+    }
+
+    const data = await response.json() as { token: string; username: string; email: string };
+    const user: AuthUser = {
+        token: data.token,
+        username: data.username,
+        email: data.email,
+        uid: data.username,
+        displayName: data.username,
+        role,
+        organizerNames: [...organizerNames],
+    };
+    persistUser(user);
+    notifyListeners(user);
+    return user;
+}
+
+export function onAuthUserChanged(callback: (user: AuthUser | null) => void): () => void {
+    listeners.push(callback);
+    // fire immediately with current state
+    callback(getCurrentUser());
+    return () => {
+        const idx = listeners.indexOf(callback);
+        if (idx !== -1) listeners.splice(idx, 1);
     };
 }
 
-function saveAccountProfileInMemory(uid: string, profile: AccountProfile) {
-    accountProfileCache.set(uid, profile);
+export async function signOutCurrentUser(): Promise<void> {
+    clearUser();
+    notifyListeners(null);
 }
 
-export async function getAccountProfile(uid: string | null | undefined): Promise<AccountProfile> {
-    if (!uid) {
+export function getStoredAccountRole(uid: string): AccountRole {
+    const user = getCurrentUser();
+    if (!user || (uid && user.uid !== uid)) {
+        return 'user';
+    }
+    return user.role ?? 'user';
+}
+
+export function getStoredOrganizerNames(uid: string): string[] {
+    const user = getCurrentUser();
+    if (!user || (uid && user.uid !== uid)) {
+        return [];
+    }
+    return Array.isArray(user.organizerNames) ? [...user.organizerNames] : [];
+}
+
+export async function getAccountProfile(uid?: string): Promise<{ role: AccountRole; organizerNames: string[] }> {
+    const user = getCurrentUser();
+    if (!user || !user.token || (uid && user.uid !== uid)) {
         return { role: 'user', organizerNames: [] };
     }
 
-    const fallbackProfile = accountProfileCache.get(uid) ?? { role: 'user', organizerNames: [] };
+    const response = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+        },
+    });
 
-    if (!isFirestoreEnabled()) {
-        return fallbackProfile;
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+        const message = (body['message'] as string | undefined) ?? response.statusText;
+        throw createHttpError(response.status, message);
     }
 
-    try {
-        const { doc, getDoc } = await import('firebase/firestore');
-        const userDoc = await getDoc(doc(db, USER_LIKES_COLLECTION, uid));
+    const data = await response.json() as { role?: AccountRole; organizerNames?: string[] };
+    const profile = {
+        role: data.role ?? 'user',
+        organizerNames: Array.isArray(data.organizerNames) ? data.organizerNames : [],
+    };
 
-        if (userDoc.exists()) {
-            const data = userDoc.data() as Record<string, unknown>;
-            const role = data.role ?? (data.organizer === true || data.orgenizer === true ? 'organizer' : 'user');
-            const firestoreProfile = buildProfilePayload(role, data.organizerNames);
-            saveAccountProfileInMemory(uid, firestoreProfile);
-            return firestoreProfile;
-        }
-    } catch {
-        // If Firestore read fails, keep using memory fallback.
-    }
+    const updatedUser: AuthUser = {
+        ...user,
+        role: profile.role,
+        organizerNames: [...profile.organizerNames],
+    };
+    persistUser(updatedUser);
+    notifyListeners(updatedUser);
 
-    return fallbackProfile;
+    return profile;
 }
 
-export function getStoredAccountRole(uid: string | null | undefined): AccountRole {
-    if (!uid) {
-        return 'user';
-    }
-
-    return accountProfileCache.get(uid)?.role ?? 'user';
-}
-
-export function getStoredOrganizerNames(uid: string | null | undefined): string[] {
-    if (!uid) {
-        return [];
-    }
-
-    return accountProfileCache.get(uid)?.organizerNames ?? [];
-}
-
-export async function loginWithEmail(email: string, password: string) {
-    const auth = getAuthInstance();
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    return credential.user;
-}
-
-export async function signupWithEmail({ username, email, password, role = 'user', organizerNames = [] }: SignupInput) {
-    const auth = getAuthInstance();
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    const trimmedUsername = username.trim();
-    const profile = buildProfilePayload(role, organizerNames);
-
-    if (trimmedUsername) {
-        await updateProfile(credential.user, { displayName: trimmedUsername });
-    }
-
-    if (credential.user?.uid) {
-        saveAccountProfileInMemory(credential.user.uid, profile);
-
-        if (isFirestoreEnabled()) {
-            const { doc, serverTimestamp, setDoc } = await import('firebase/firestore');
-            const userDoc: Omit<UserDto, 'createdAt'> & { createdAt: Timestamp | FieldValue } = {
-                uid: credential.user.uid,
-                name: trimmedUsername || credential.user.displayName || '',
-                email: credential.user.email || email,
-                organizer: profile.role === 'organizer',
-                role: profile.role,
-                createdAt: serverTimestamp(),
-                likedItemIds: [],
-                organizerNames: profile.organizerNames,
-            };
-
-            await setDoc(doc(db, USER_LIKES_COLLECTION, credential.user.uid), userDoc, { merge: true });
-        }
-    }
-
-    return credential.user;
-}
-
-export function onAuthUserChanged(callback: (user: AuthUser | null) => void) {
-    const auth = getAuthInstance();
-    return onAuthStateChanged(auth, callback);
-}
-
-export async function signOutCurrentUser() {
-    const auth = getAuthInstance();
-    await signOut(auth);
-}
-
-export function mapAuthError(error: unknown, context: AuthErrorContext = 'general'): string {
-    if (error instanceof Error && error.message.includes('Missing Firebase env variables:')) {
-        return error.message;
-    }
-
-    if (error instanceof Error && error.message.includes('auth/invalid-api-key')) {
-        return 'Firebase Auth is not configured correctly (invalid API key).';
-    }
-
-    if (!(error instanceof FirebaseError)) {
-        return 'Something went wrong. Please try again.';
-    }
-
-    switch (error.code) {
-        case 'auth/operation-not-allowed':
-            return 'Email/password sign-in is disabled in Firebase Authentication. Enable it in Firebase Console -> Authentication -> Sign-in method.';
-        case 'auth/configuration-not-found':
-            return 'Authentication provider configuration is missing in Firebase Console.';
-        case 'auth/invalid-email':
-            if (context === 'login') {
-                return 'Invalid email or password.';
-            }
-            return 'The email address is invalid.';
-        case 'auth/user-disabled':
-            return 'This account has been disabled.';
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function mapAuthError(error: unknown, _context?: AuthErrorContext): string {
+    if (error && typeof error === 'object') {
+        const e = error as { status?: number; message?: string };
+        if (e.status === 401 || e.status === 403) {
             return 'Invalid email or password.';
-        case 'auth/email-already-in-use':
-            return 'This email is already in use.';
-        case 'auth/weak-password':
-            return 'Password must be at least 6 characters.';
-        case 'auth/too-many-requests':
-            return 'Too many attempts. Please wait and try again.';
-        case 'auth/network-request-failed':
-            return 'Network error. Check your connection and try again.';
-        case 'auth/admin-restricted-operation':
-            return 'This operation is restricted by Firebase project settings.';
-        case 'auth/unauthorized-domain':
-            return 'Current domain is not authorized for Firebase Auth. Add localhost in Firebase Console -> Authentication -> Settings -> Authorized domains.';
-        default:
-            return `Authentication failed (${error.code}). Please verify Firebase Authentication settings.`;
+        }
+        if (e.status === 409 || (e.status !== undefined && e.message && e.message.toLowerCase().includes('already'))) {
+            return e.message ?? 'Account already exists.';
+        }
+        if (e.status === 400) {
+            return e.message ?? 'Invalid input. Please check your details.';
+        }
+        // Only surface the message when it came from our backend (has a known status code).
+        if (e.status !== undefined && e.message) {
+            return e.message;
+        }
     }
+    return 'Something went wrong. Please try again.';
 }

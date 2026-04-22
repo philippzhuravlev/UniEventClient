@@ -27,6 +27,6 @@ export function getAuthInstance(): Auth {
 // If enabled, point the web app at the local Firestore emulator
 // Set VITE_FIRESTORE_EMULATOR=true in web/.env while running `firebase emulators:start`
 if (import.meta.env.VITE_FIRESTORE_EMULATOR === 'true') {
-  console.log('🔥 Connecting to local Firestore emulator');
+  console.log('Connecting to local Firestore emulator');
   connectFirestoreEmulator(db, 'localhost', 8080);
 }
