@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Use global fetch mock provided by jsdom.
 const mockFetch = vi.fn();
-vi.stubGlobal('fetch', mockFetch);
 
 // Provide a full localStorage mock that works across Node/jsdom environments.
 const localStorageStore: Record<string, string> = {};
@@ -12,7 +11,6 @@ const localStorageMock = {
     removeItem: (key: string) => { delete localStorageStore[key]; },
     clear: () => { Object.keys(localStorageStore).forEach((k) => delete localStorageStore[k]); },
 };
-vi.stubGlobal('localStorage', localStorageMock);
 
 // Helper: build a successful JSON fetch response.
 function jsonResponse(body: unknown, status = 200): Response {
@@ -44,6 +42,12 @@ describe('auth service', () => {
     beforeEach(() => {
         localStorageMock.clear();
         mockFetch.mockReset();
+        vi.stubGlobal('fetch', mockFetch);
+        vi.stubGlobal('localStorage', localStorageMock);
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
     });
 
     afterEach(() => {
