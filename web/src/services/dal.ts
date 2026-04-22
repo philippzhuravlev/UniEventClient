@@ -191,7 +191,7 @@ export async function getEvents(page: number = 0, size: number = 100): Promise<E
  * Fetch upcoming events only (startTime >= now, paginated)
  */
 export async function getFutureEvents(page: number = 0, size: number = 100): Promise<Event[]> {
-  const url = new URL(`${BACKEND_URL}/api/events/future`);
+  const url = buildBackendUrl('/api/events/future');
   url.searchParams.append('page', page.toString());
   url.searchParams.append('size', size.toString());
 
