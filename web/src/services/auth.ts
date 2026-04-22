@@ -9,6 +9,8 @@ export type AuthUser = {
     uid?: string;
     displayName?: string;
     photoURL?: string | null;
+    role?: AccountRole;
+    organizerNames?: string[];
 };
 
 export type AccountRole = 'user' | 'organizer';
@@ -100,7 +102,15 @@ export async function signupWithEmail({ username, email, password, role, organiz
     }
 
     const data = await response.json() as { token: string; username: string; email: string };
-    const user: AuthUser = { token: data.token, username: data.username, email: data.email, uid: data.username, displayName: data.username };
+    const user: AuthUser = {
+        token: data.token,
+        username: data.username,
+        email: data.email,
+        uid: data.username,
+        displayName: data.username,
+        role,
+        organizerNames: [...organizerNames],
+    };
     persistUser(user);
     notifyListeners(user);
     return user;
@@ -121,16 +131,55 @@ export async function signOutCurrentUser(): Promise<void> {
     notifyListeners(null);
 }
 
-export function getStoredAccountRole(_uid: string): AccountRole {
-    return 'user';
+export function getStoredAccountRole(uid: string): AccountRole {
+    const user = getCurrentUser();
+    if (!user || (uid && user.uid !== uid)) {
+        return 'user';
+    }
+    return user.role ?? 'user';
 }
 
-export function getStoredOrganizerNames(_uid: string): string[] {
-    return [];
+export function getStoredOrganizerNames(uid: string): string[] {
+    const user = getCurrentUser();
+    if (!user || (uid && user.uid !== uid)) {
+        return [];
+    }
+    return Array.isArray(user.organizerNames) ? [...user.organizerNames] : [];
 }
 
-export async function getAccountProfile(_uid?: string): Promise<{ role: AccountRole; organizerNames: string[] }> {
-    return { role: 'user', organizerNames: [] };
+export async function getAccountProfile(uid?: string): Promise<{ role: AccountRole; organizerNames: string[] }> {
+    const user = getCurrentUser();
+    if (!user || !user.token || (uid && user.uid !== uid)) {
+        return { role: 'user', organizerNames: [] };
+    }
+
+    const response = await fetch(`${BACKEND_URL}/api/auth/profile`, {
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+        throw { status: response.status, message: (body['message'] as string | undefined) ?? response.statusText };
+    }
+
+    const data = await response.json() as { role?: AccountRole; organizerNames?: string[] };
+    const profile = {
+        role: data.role ?? 'user',
+        organizerNames: Array.isArray(data.organizerNames) ? data.organizerNames : [],
+    };
+
+    const updatedUser: AuthUser = {
+        ...user,
+        role: profile.role,
+        organizerNames: [...profile.organizerNames],
+    };
+    persistUser(updatedUser);
+    notifyListeners(updatedUser);
+
+    return profile;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
