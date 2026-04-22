@@ -162,7 +162,8 @@ export async function getAccountProfile(uid?: string): Promise<{ role: AccountRo
 
     if (!response.ok) {
         const body = await response.json().catch(() => ({})) as Record<string, unknown>;
-        throw { status: response.status, message: (body['message'] as string | undefined) ?? response.statusText };
+        const message = (body['message'] as string | undefined) ?? response.statusText;
+        throw createHttpError(response.status, message);
     }
 
     const data = await response.json() as { role?: AccountRole; organizerNames?: string[] };
