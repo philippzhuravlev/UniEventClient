@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 
-const LOGO_SRC = 'https://firebasestorage.googleapis.com/v0/b/dtuevent-8105b.firebasestorage.app/o/picture%2Fdtulogo.png?alt=media&token=7e86de6e-f1f4-471d-8354-70ad70bafe14';
+const LOGO_SRC = '/dtuevent-logo.png';
 
 export function HeaderLogoLink() {
     const location = useLocation();

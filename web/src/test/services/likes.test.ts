@@ -1,86 +1,53 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const mockDoc = vi.fn();
-const mockGetDoc = vi.fn();
-const mockSetDoc = vi.fn();
-const mockServerTimestamp = vi.fn(() => 'mock-server-ts');
-
-const usersStore = new Map<string, Record<string, unknown>>();
-
-vi.mock('../../services/firebase', () => ({
-    db: { name: 'fake-db' },
-}));
-
-vi.mock('firebase/firestore', () => ({
-    doc: (...args: unknown[]) => mockDoc(...args),
-    getDoc: (...args: unknown[]) => mockGetDoc(...args),
-    setDoc: (...args: unknown[]) => mockSetDoc(...args),
-    serverTimestamp: () => mockServerTimestamp(),
-}));
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { getLikedEventIdsAsync, isEventLiked, toggleLikedEvent } from '../../services/likes';
 
+// Reset localStorage and the module-level cache between tests.
+// The cache lives in the module closure, so we re-import fresh each time via
+// the module registry reset configured in vite.config.ts / vitest.config.ts.
+// Clearing localStorage is enough to prevent storage bleed-through.
+beforeEach(() => {
+    localStorage.clear();
+});
+
 describe('likes service', () => {
-    beforeEach(() => {
-        vi.unstubAllEnvs();
-        usersStore.clear();
-        mockDoc.mockReset();
-        mockGetDoc.mockReset();
-        mockSetDoc.mockReset();
-
-        mockDoc.mockImplementation((_: unknown, __: string, uid: string) => ({ uid }));
-        mockGetDoc.mockImplementation(async (docRef: { uid: string }) => {
-            const data = usersStore.get(docRef.uid);
-            return {
-                exists: () => !!data,
-                data: () => data,
-            };
-        });
-        mockSetDoc.mockImplementation(async (docRef: { uid: string }, data: Record<string, unknown>) => {
-            const existing = usersStore.get(docRef.uid) ?? {};
-            usersStore.set(docRef.uid, { ...existing, ...data });
-        });
-    });
-
     it('starts with no liked events for unknown users', async () => {
         await expect(getLikedEventIdsAsync('missing-user')).resolves.toEqual([]);
         await expect(isEventLiked('missing-user', 'event-1')).resolves.toBe(false);
     });
 
+    it('returns empty array for null/undefined uid', async () => {
+        await expect(getLikedEventIdsAsync(null)).resolves.toEqual([]);
+        await expect(getLikedEventIdsAsync(undefined)).resolves.toEqual([]);
+    });
+
+    it('persists likes to localStorage and reads them back', async () => {
+        await toggleLikedEvent('persist-user', 'event-1');
+        const stored = JSON.parse(localStorage.getItem('unievent_likes_persist-user') ?? '[]');
+        expect(stored).toContain('event-1');
+    });
+
     it('toggles liked events per user and keeps users isolated', async () => {
-        await expect(toggleLikedEvent('user-a', 'event-1')).resolves.toBe(true);
-        await expect(isEventLiked('user-a', 'event-1')).resolves.toBe(true);
+        await expect(toggleLikedEvent('toggle-a', 'event-1')).resolves.toBe(true);
+        await expect(isEventLiked('toggle-a', 'event-1')).resolves.toBe(true);
 
-        await expect(toggleLikedEvent('user-b', 'event-1')).resolves.toBe(true);
-        await expect(getLikedEventIdsAsync('user-a')).resolves.toEqual(['event-1']);
-        await expect(getLikedEventIdsAsync('user-b')).resolves.toEqual(['event-1']);
+        await expect(toggleLikedEvent('toggle-b', 'event-1')).resolves.toBe(true);
+        await expect(getLikedEventIdsAsync('toggle-a')).resolves.toEqual(['event-1']);
+        await expect(getLikedEventIdsAsync('toggle-b')).resolves.toEqual(['event-1']);
 
-        await expect(toggleLikedEvent('user-a', 'event-1')).resolves.toBe(false);
-        await expect(getLikedEventIdsAsync('user-a')).resolves.toEqual([]);
-        await expect(getLikedEventIdsAsync('user-b')).resolves.toEqual(['event-1']);
+        await expect(toggleLikedEvent('toggle-a', 'event-1')).resolves.toBe(false);
+        await expect(getLikedEventIdsAsync('toggle-a')).resolves.toEqual([]);
+        await expect(getLikedEventIdsAsync('toggle-b')).resolves.toEqual(['event-1']);
     });
 
-    it('falls back to cache when firestore mode fails', async () => {
-        vi.stubEnv('VITE_USE_FIRESTORE', 'true');
-        mockGetDoc.mockRejectedValueOnce(new Error('permission-denied'));
+    it('handles multiple events per user independently', async () => {
+        await toggleLikedEvent('multi-user', 'event-a');
+        await toggleLikedEvent('multi-user', 'event-b');
 
-        await expect(toggleLikedEvent('user-c', 'event-9')).resolves.toBe(true);
-        await expect(isEventLiked('user-c', 'event-9')).resolves.toBe(true);
-    });
+        await expect(isEventLiked('multi-user', 'event-a')).resolves.toBe(true);
+        await expect(isEventLiked('multi-user', 'event-b')).resolves.toBe(true);
 
-    it('keeps optimistic toggle when setDoc fails after successful getDoc', async () => {
-        vi.stubEnv('VITE_USE_FIRESTORE', 'true');
-        mockSetDoc.mockRejectedValueOnce(new Error('write-failed'));
-
-        await expect(toggleLikedEvent('user-d', 'event-10')).resolves.toBe(true);
-        await expect(isEventLiked('user-d', 'event-10')).resolves.toBe(true);
-    });
-
-    it('keeps optimistic un-toggle when setDoc fails after successful getDoc', async () => {
-        vi.stubEnv('VITE_USE_FIRESTORE', 'true');
-        usersStore.set('user-e', { likedItemIds: ['event-11'] });
-        mockSetDoc.mockRejectedValueOnce(new Error('write-failed'));
-
-        await expect(toggleLikedEvent('user-e', 'event-11')).resolves.toBe(false);
+        await toggleLikedEvent('multi-user', 'event-a');
+        await expect(isEventLiked('multi-user', 'event-a')).resolves.toBe(false);
+        await expect(isEventLiked('multi-user', 'event-b')).resolves.toBe(true);
     });
 });

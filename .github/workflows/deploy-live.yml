@@ -1,0 +1,76 @@
+name: Deploy Live
+
+on:
+  push:
+    branches:
+      - live
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-live
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.LIVE_DEPLOY_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.LIVE_DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build
+        run: cd web && npm ci && npm run build
+
+      - name: Deploy on remote host
+        env:
+          DEPLOY_HOST: ${{ secrets.LIVE_DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.LIVE_DEPLOY_USER }}
+          LIVE_CLIENT_DEPLOY_PATH: ${{ secrets.LIVE_CLIENT_DEPLOY_PATH }}
+          LIVE_BACKEND_DEPLOY_PATH: ${{ secrets.LIVE_BACKEND_DEPLOY_PATH }}
+          LIVE_FRONTEND_ENV: ${{ secrets.LIVE_FRONTEND_ENV }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "LIVE_CLIENT_DEPLOY_PATH='${LIVE_CLIENT_DEPLOY_PATH}' LIVE_BACKEND_DEPLOY_PATH='${LIVE_BACKEND_DEPLOY_PATH}' LIVE_FRONTEND_ENV=${LIVE_FRONTEND_ENV@Q} bash -s" <<'EOF'
+          set -euo pipefail
+
+          cd "${LIVE_CLIENT_DEPLOY_PATH}"
+          git fetch origin
+          git checkout live
+          git reset --hard origin/live
+
+          printf '%s\n' "${LIVE_FRONTEND_ENV}" > web/.env
+
+          cd "${LIVE_BACKEND_DEPLOY_PATH}"
+
+          if docker compose version >/dev/null 2>&1; then
+            COMPOSE_CMD='docker compose'
+          elif command -v docker-compose >/dev/null 2>&1; then
+            COMPOSE_CMD='docker-compose'
+          else
+            echo 'Neither docker compose plugin nor docker-compose binary is installed on the server.'
+            exit 1
+          fi
+
+          ${COMPOSE_CMD} up -d --build frontend
+
+          ${COMPOSE_CMD} ps frontend
+          EOF
