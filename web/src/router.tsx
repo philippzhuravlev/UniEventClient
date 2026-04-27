@@ -6,6 +6,8 @@ import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { DataDeletionPage } from './pages/DataDeletionPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { OrganizerSignupPage } from './pages/OrganizerSignupPage';
+import { OrganizerSignupLandingPage } from './pages/OrganizerSignupLandingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ManualEventPage } from './pages/ManualEventPage';
 import { BecomeOrganizerOnboardingPage } from './pages/BecomeOrganizerOnboardingPage';
@@ -38,6 +40,14 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    path: '/signup-organizer',
+    element: <OrganizerSignupPage />,
+  },
+  {
+    path: '/signup-organizer-landing',
+    element: <OrganizerSignupLandingPage />,
   },
   {
     path: '/profile',
