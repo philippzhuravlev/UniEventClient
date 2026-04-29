@@ -5,7 +5,8 @@
  * Replaces Firebase Firestore calls with REST API calls.
  */
 
-import type { Event, Page, Place } from '../types';
+import { getAuthToken } from './auth';
+import type { CreateEventRequest, CreatePageRequest, Event, Page, Place } from '../types';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? '';
 
@@ -115,6 +116,14 @@ async function createFetchError(response: Response, context: string): Promise<Er
   }
 
   return new Error(message);
+}
+
+function getRequiredAuthToken(): string {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+  return token;
 }
 
 /**
@@ -271,4 +280,76 @@ export async function getEventsByPlaceId(placeId: string, page: number = 0, size
 
   const data: ApiResponse<EventApiResponse> = await response.json();
   return data.content.map(mapEventResponse);
+}
+
+/**
+ * Create a new page/organizer (authenticated)
+ */
+export async function createPage(payload: CreatePageRequest): Promise<Page> {
+  const token = getRequiredAuthToken();
+
+  const response = await fetch(buildBackendUrlString('/api/pages'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw await createFetchError(response, 'Failed to create page');
+  }
+
+  const data: PageApiResponse = await response.json();
+  return mapPageResponse(data);
+}
+
+/**
+ * Create a new event (authenticated)
+ */
+export async function createEvent(payload: CreateEventRequest): Promise<Event> {
+  const token = getRequiredAuthToken();
+
+  const response = await fetch(buildBackendUrlString('/api/events'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw await createFetchError(response, 'Failed to create event');
+  }
+
+  const data: EventApiResponse = await response.json();
+  return mapEventResponse(data);
+}
+
+/**
+ * Upload a cover image for an event (multipart/form-data)
+ */
+export async function uploadEventCover(eventId: string, file: File): Promise<Event> {
+  const token = getRequiredAuthToken();
+  const url = buildBackendUrlString(`/api/events/${eventId}/coverImage`);
+
+  const form = new FormData();
+  form.append('file', file, file.name);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    } as Record<string, string>,
+    body: form,
+  });
+
+  if (!response.ok) {
+    throw await createFetchError(response, 'Failed to upload event cover image');
+  }
+
+  const data: EventApiResponse = await response.json();
+  return mapEventResponse(data);
 }

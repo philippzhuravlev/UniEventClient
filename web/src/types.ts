@@ -40,6 +40,23 @@ export interface Place {
     location?: Location;
 }
 
+export type CreatePageRequest = {
+    id?: string;
+    name: string;
+    url: string;
+    active: boolean;
+};
+
+export type CreateEventRequest = {
+    pageId: string;
+    title: string;
+    description?: string;
+    startTime: string;
+    endTime?: string;
+    place?: Place;
+    eventUrl?: string;
+};
+
 // Event Page Component Props
 export interface EventHeaderProps {
     onBack: () => void;
