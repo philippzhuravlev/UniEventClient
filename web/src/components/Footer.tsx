@@ -11,8 +11,14 @@ export function Footer() {
             <h3 className="font-bold text-lg text-[var(--text-primary)] mb-2">DTUEvent</h3>
             <p className="text-sm text-[var(--text-subtle)]">
               A unified calendar for DTU campus events
-            </p>
-          </div>
+             </p>
+            <Link
+              to="/organizer/onboarding"
+              className="mt-2 inline-block text-sm text-[var(--link-primary)] hover:text-[var(--link-hover)] transition-colors"
+            >
+              Become an Organizer
+            </Link>
+           </div>
 
           {/* Legal */}
           <div>
@@ -34,14 +40,6 @@ export function Footer() {
                   className="text-[var(--link-primary)] hover:text-[var(--link-hover)] transition-colors"
                 >
                   Data Deletion Instructions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/organizer/onboarding"
-                  className="text-[var(--link-primary)] hover:text-[var(--link-hover)] transition-colors"
-                >
-                  Become Organizer Onboarding
                 </Link>
               </li>
             </ul>

@@ -6,8 +6,7 @@ import { CalendarView } from '../components/Calendar';
 import { Footer } from '../components/Footer';
 import { HeaderLogoLink } from '../components/HeaderLogoLink';
 import { getEvents, getPages } from '../services/dal';
-import { getAuthToken, mapAuthError, signOutCurrentUser } from '../services/auth';
-import { getFacebookAuthUrl } from '../services/facebook';
+import { mapAuthError, signOutCurrentUser } from '../services/auth';
 import { parseDateOnly, startOfDayMs, endOfDayMs } from '../utils/dateUtils';
 import type { Event as EventType, Page } from '../types';
 import { Link } from 'react-router-dom';
@@ -22,8 +21,6 @@ export function MainPage() {
   const [error, setError] = useState<string>('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [fbConnecting, setFbConnecting] = useState(false);
-  const [fbMessage, setFbMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   // organizer filter
@@ -84,37 +81,9 @@ export function MainPage() {
     return () => clearTimeout(id);
   }, [query]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const success = params.get('success');
-    const fbError = params.get('error');
-    if (success === 'true') {
-      const pages = params.get('pages');
-      setFbMessage({ kind: 'success', text: `Facebook connected - ${pages ?? '0'} page(s) linked.` });
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (fbError) {
-      setFbMessage({ kind: 'error', text: `Facebook error: ${fbError}` });
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
 
-  async function handleFacebookConnect() {
-    const token = getAuthToken();
-    if (!token) {
-      setFbMessage({ kind: 'error', text: 'You must be logged in to connect Facebook.' });
-      return;
-    }
-    try {
-      setFbConnecting(true);
-      setFbMessage(null);
-      const url = await getFacebookAuthUrl(token);
-      window.location.href = url;
-    } catch (err) {
-      setFbMessage({ kind: 'error', text: err instanceof Error ? err.message : 'Could not start Facebook login.' });
-    } finally {
-      setFbConnecting(false);
-    }
-  }
+
+
 
   async function handleSignOut() {
     try {
@@ -328,21 +297,6 @@ export function MainPage() {
           </div>
 
           {viewMode === 'list' ? <EventList list={list} /> : <CalendarView events={list} />}
-
-          <div className="flex flex-col items-center gap-2">
-            {fbMessage && (
-              <p className={`text-sm font-medium ${fbMessage.kind === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                {fbMessage.text}
-              </p>
-            )}
-            <button
-              onClick={handleFacebookConnect}
-              disabled={fbConnecting}
-              className="bg-[var(--link-primary)] hover:bg-[var(--link-primary-hover)] text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {fbConnecting ? 'Connecting…' : 'Connect Facebook Page'}
-            </button>
-          </div>
         </div>
       </div>
 

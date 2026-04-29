@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HeaderLogoLink } from '../components/HeaderLogoLink';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Footer } from '../components/Footer';
-import { getAccountProfile, onAuthUserChanged, signOutCurrentUser, type AccountRole, type AuthUser } from '../services/auth';
+import { onAuthUserChanged, signOutCurrentUser, type AccountRole, type AuthUser } from '../services/auth';
 import { buildFacebookLoginUrl } from '../services/facebook';
 import { getEvents } from '../services/dal';
 import { getLikedEventIdsAsync, LIKES_CHANGED_EVENT } from '../services/likes';
@@ -88,7 +88,6 @@ export function ProfilePage() {
     const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
     const [accountRole, setAccountRole] = useState<AccountRole>('user');
-    const [organizerNames, setOrganizerNames] = useState<string[]>([]);
     const [isSigningOut, setIsSigningOut] = useState(false);
     const [allEvents, setAllEvents] = useState<EventType[]>([]);
     const [likedEvents, setLikedEvents] = useState<EventType[]>([]);
@@ -125,24 +124,10 @@ export function ProfilePage() {
     const profileImage = currentUser?.photoURL;
 
     useEffect(() => {
-        let cancelled = false;
-
-        const loadAccountProfile = async () => {
-            const profile = await getAccountProfile(currentUser?.uid);
-            if (cancelled) {
-                return;
-            }
-
-            setAccountRole(profile.role);
-            setOrganizerNames(profile.organizerNames);
-        };
-
-        void loadAccountProfile();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [currentUser?.uid]);
+        if (currentUser?.role) {
+            setAccountRole(currentUser.role);
+        }
+    }, [currentUser?.role]);
 
     useEffect(() => {
         let cancelled = false;
@@ -251,9 +236,11 @@ export function ProfilePage() {
                                         <h2 className="text-3xl font-bold text-[var(--text-primary)]">{username}</h2>
                                         <span className={`mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] ${accountRole === 'organizer'
                                             ? 'border border-transparent bg-[var(--link-primary)] text-white'
-                                            : 'border border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)]'
+                                            : accountRole === 'admin'
+                                                ? 'border border-transparent bg-emerald-600 text-white'
+                                                : 'border border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)]'
                                             }`}>
-                                            {accountRole === 'organizer' ? 'Organizer' : 'User'}
+                                            {accountRole === 'organizer' ? 'Organizer' : accountRole === 'admin' ? 'Admin' : 'User'}
                                         </span>
                                     </div>
 
@@ -267,25 +254,18 @@ export function ProfilePage() {
                                             <Heart size={12} fill="currentColor" />
                                             {likedEvents.length} saved
                                         </span>
+                                        {accountRole === 'admin' && (
+                                            <Link
+                                                to="/admin/generate-organizer-key"
+                                                className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-200 transition-colors duration-200 hover:bg-emerald-500/20"
+                                            >
+                                                Admin: Generate Organizer Key
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {accountRole === 'organizer' && (
-                            <aside className="rounded-xl border border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel-bg)_72%,var(--input-bg)_28%)] p-4 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-subtle)]">Organizations</p>
-                                <div className="mt-3 space-y-2">
-                                    {organizerNames.length ? organizerNames.map((organization) => (
-                                        <div key={organization} className="inline-flex w-full items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-bg)]/85 px-3 py-2 text-xs font-semibold text-[var(--text-primary)]">
-                                            {organization}
-                                        </div>
-                                    )) : (
-                                        <p className="py-3 text-xs text-[var(--text-subtle)]">No organizations linked yet.</p>
-                                    )}
-                                </div>
-                            </aside>
-                        )}
                     </div>
                 </section>
 

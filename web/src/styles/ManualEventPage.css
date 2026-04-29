@@ -99,6 +99,34 @@ html.dark .manual-event-card-glow {
     gap: 0.95rem;
 }
 
+.manual-event-feedback {
+    border-radius: 12px;
+    border: 1px solid var(--panel-border);
+    padding: 0.72rem 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.manual-event-feedback-error {
+    border-color: rgba(190, 42, 42, 0.35);
+    background: rgba(190, 42, 42, 0.1);
+    color: #8b1a1a;
+}
+
+.manual-event-feedback-success {
+    border-color: rgba(40, 138, 80, 0.35);
+    background: rgba(40, 138, 80, 0.1);
+    color: #1f6b3d;
+}
+
+html.dark .manual-event-feedback-error {
+    color: #ffb0b0;
+}
+
+html.dark .manual-event-feedback-success {
+    color: #9cf0c2;
+}
+
 .manual-event-section {
     border-radius: 18px;
     border: 1px solid var(--panel-border);
