@@ -17,7 +17,7 @@
 .track {
   position: absolute;
   inset: 0;
-  background: #d0d0d0;
+  background: var(--toggle-track-light);
   border-radius: 50px;
   transition: background 0.3s;
 }
@@ -29,28 +29,25 @@
   left: 3px;
   height: 26px;
   width: 26px;
-  background: white;
+  background: var(--toggle-thumb-light);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.3s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
-  color: #1a1a1a;
+  color: var(--toggle-icon-light);
 }
 
 /* WHEN DARK MODE IS ON (checked) */
 .theme-slider input:checked+.track {
-  background: #000000;
-  /* Black as fuck */
+  background: var(--toggle-track-dark);
 }
 
 .theme-slider input:checked+.track .thumb {
   transform: translateX(28px);
-  background: #111;
-  /* dark circle */
-  color: white;
-  /* moon icon visible */
+  background: var(--toggle-thumb-dark);
+  color: var(--toggle-icon-dark);
 }
 
 @media (max-width: 640px) {

@@ -58,6 +58,17 @@ html.dark body {
   /* Links - Light Mode */
   --link-primary: #E85D3B;
   --link-primary-hover: #D84D2B;
+
+  /* Status - Light Mode */
+  --status-error: #8b1a1a;
+  --status-error-light: #ffb0b0;
+  --status-success: #1f6b3d;
+  --status-success-light: #9cf0c2;
+
+  /* Toggle - Light Mode */
+  --toggle-track-light: #d0d0d0;
+  --toggle-thumb-light: #ffffff;
+  --toggle-icon-light: #1a1a1a;
 }
 
 /* Dark Mode (Night) - DTU Dark Blue */
@@ -97,6 +108,17 @@ html.dark {
   /* Links - Dark Mode */
   --link-primary: #1E3FF2;
   --link-primary-hover: #4B6FFF;
+
+  /* Status - Dark Mode */
+  --status-error: #ffb0b0;
+  --status-error-light: #8b1a1a;
+  --status-success: #9cf0c2;
+  --status-success-light: #1f6b3d;
+
+  /* Toggle - Dark Mode */
+  --toggle-track-dark: #000000;
+  --toggle-thumb-dark: #111111;
+  --toggle-icon-dark: #ffffff;
 }
 
 /* ===== BASE STYLES ===== */

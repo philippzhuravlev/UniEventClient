@@ -110,21 +110,21 @@ html.dark .manual-event-card-glow {
 .manual-event-feedback-error {
     border-color: rgba(190, 42, 42, 0.35);
     background: rgba(190, 42, 42, 0.1);
-    color: #8b1a1a;
+    color: var(--status-error);
 }
 
 .manual-event-feedback-success {
     border-color: rgba(40, 138, 80, 0.35);
     background: rgba(40, 138, 80, 0.1);
-    color: #1f6b3d;
+    color: var(--status-success);
 }
 
 html.dark .manual-event-feedback-error {
-    color: #ffb0b0;
+    color: var(--status-error);
 }
 
 html.dark .manual-event-feedback-success {
-    color: #9cf0c2;
+    color: var(--status-success);
 }
 
 .manual-event-section {
@@ -158,7 +158,7 @@ html.dark .manual-event-feedback-success {
     gap: 0.4rem;
 }
 
-.manual-event-field > span {
+.manual-event-field>span {
     color: var(--text-primary);
     font-size: 0.8rem;
     font-weight: 700;

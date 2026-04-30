@@ -65,11 +65,11 @@
 }
 
 .signup-status-success {
-    color: #11823b;
+    color: var(--status-success);
 }
 
 html.dark .signup-status-success {
-    color: #60d88e;
+    color: var(--status-success);
 }
 
 @media (min-width: 768px) {
