@@ -11,10 +11,10 @@
     width: min(980px, 100%);
     border-radius: 30px;
     border: 1px solid var(--panel-border);
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 239, 235, 0.95) 52%, rgba(249, 241, 238, 0.97) 100%);
+    background: linear-gradient(160deg, var(--onboarding-card-bg-start) 0%, var(--onboarding-card-bg-mid) 52%, var(--onboarding-card-bg-end) 100%);
     box-shadow:
-        0 28px 54px rgba(58, 34, 27, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+        0 28px 54px var(--editor-card-shadow),
+        inset 0 1px 0 var(--editor-card-inset);
     overflow: hidden;
 }
 
@@ -23,23 +23,23 @@
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 96% 4%, rgba(60, 84, 240, 0.24) 0%, transparent 40%),
-        radial-gradient(circle at 8% 0%, rgba(232, 93, 59, 0.16) 0%, transparent 38%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 38%);
+        radial-gradient(circle at 96% 4%, var(--editor-glow-blue-strong) 0%, transparent 40%),
+        radial-gradient(circle at 8% 0%, var(--editor-glow-accent-medium) 0%, transparent 38%),
+        linear-gradient(180deg, var(--editor-glow-white-light), transparent 38%);
 }
 
 html.dark .organizer-onboarding-card {
-    background: linear-gradient(160deg, rgba(15, 19, 46, 0.9) 0%, rgba(12, 15, 36, 0.92) 48%, rgba(8, 10, 28, 0.94) 100%);
+    background: linear-gradient(160deg, var(--onboarding-card-bg-start) 0%, var(--onboarding-card-bg-mid) 48%, var(--onboarding-card-bg-end) 100%);
     box-shadow:
-        0 26px 52px rgba(0, 0, 0, 0.34),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 26px 52px var(--editor-card-shadow),
+        inset 0 1px 0 var(--editor-card-inset);
 }
 
 html.dark .organizer-onboarding-glow {
     background:
-        radial-gradient(circle at 96% 4%, rgba(82, 106, 255, 0.3) 0%, transparent 40%),
-        radial-gradient(circle at 8% 0%, rgba(232, 93, 59, 0.2) 0%, transparent 40%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 38%);
+        radial-gradient(circle at 96% 4%, var(--editor-glow-blue-strong) 0%, transparent 40%),
+        radial-gradient(circle at 8% 0%, var(--editor-glow-accent-medium) 0%, transparent 40%),
+        linear-gradient(180deg, var(--editor-glow-white-light), transparent 38%);
 }
 
 .organizer-onboarding-content {
@@ -83,7 +83,7 @@ html.dark .organizer-onboarding-glow {
     gap: 0.45rem;
     border-radius: 999px;
     border: 1px solid var(--panel-border);
-    background: rgba(232, 93, 59, 0.12);
+    background: var(--editor-highlight-bg);
     color: var(--text-primary);
     padding: 0.46rem 0.9rem;
     font-size: 0.8rem;
@@ -111,7 +111,7 @@ html.dark .organizer-onboarding-glow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(60, 84, 240, 0.14);
+    background: var(--editor-step-icon-bg);
     color: var(--text-primary);
 }
 
@@ -190,8 +190,8 @@ html.dark .organizer-onboarding-glow {
 
 .organizer-btn-primary {
     background: linear-gradient(135deg, var(--dtu-accent) 0%, var(--dtu-accent-hover) 100%);
-    color: #fff;
-    box-shadow: 0 12px 30px rgba(232, 93, 59, 0.26);
+    color: var(--text-on-accent);
+    box-shadow: 0 12px 30px var(--editor-primary-shadow);
 }
 
 .organizer-btn-ghost {

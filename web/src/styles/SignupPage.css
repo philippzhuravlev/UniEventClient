@@ -11,10 +11,10 @@
     width: min(680px, 100%);
     border-radius: 28px;
     border: 1px solid var(--panel-border);
-    background: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(247, 239, 236, 0.92) 100%);
+    background: linear-gradient(165deg, var(--auth-card-bg-start) 0%, var(--auth-card-bg-end) 100%);
     box-shadow:
-        0 20px 45px rgba(53, 34, 27, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+        0 20px 45px var(--auth-card-shadow),
+        inset 0 1px 0 var(--auth-card-inset);
     overflow: hidden;
 }
 
@@ -23,21 +23,21 @@
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 88% 8%, rgba(60, 84, 240, 0.16) 0%, transparent 42%),
-        radial-gradient(circle at 12% 0%, rgba(232, 93, 59, 0.12) 0%, transparent 46%);
+        radial-gradient(circle at 88% 8%, var(--auth-glow-blue-soft) 0%, transparent 42%),
+        radial-gradient(circle at 12% 0%, var(--auth-glow-accent-soft) 0%, transparent 46%);
 }
 
 html.dark .signup-card {
-    background: linear-gradient(165deg, rgba(16, 21, 52, 0.82) 0%, rgba(10, 12, 32, 0.92) 100%);
+    background: linear-gradient(165deg, var(--auth-card-bg-start) 0%, var(--auth-card-bg-end) 100%);
     box-shadow:
-        0 20px 45px rgba(0, 0, 0, 0.32),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        0 20px 45px var(--auth-card-shadow),
+        inset 0 1px 0 var(--auth-card-inset);
 }
 
 html.dark .signup-card-glow {
     background:
-        radial-gradient(circle at 88% 8%, rgba(60, 84, 240, 0.24) 0%, transparent 42%),
-        radial-gradient(circle at 12% 0%, rgba(232, 93, 59, 0.16) 0%, transparent 46%);
+        radial-gradient(circle at 88% 8%, var(--auth-glow-blue-strong) 0%, transparent 42%),
+        radial-gradient(circle at 12% 0%, var(--auth-glow-accent-soft) 0%, transparent 46%);
 }
 
 .signup-card-content {
@@ -126,7 +126,7 @@ html.dark .signup-card-glow {
 
 .signup-input:focus {
     border-color: var(--input-focus-border);
-    box-shadow: 0 0 0 3px rgba(60, 84, 240, 0.24);
+    box-shadow: 0 0 0 3px var(--focus-ring-strong);
     transform: translateY(-1px);
 }
 
@@ -207,34 +207,34 @@ html.dark .signup-card-glow {
 
 .signup-btn-primary {
     background: linear-gradient(135deg, var(--dtu-accent) 0%, var(--dtu-accent-hover) 100%);
-    color: #fff;
-    box-shadow: 0 12px 30px rgba(232, 93, 59, 0.28);
+    color: var(--text-on-accent);
+    box-shadow: 0 12px 30px var(--auth-primary-shadow);
 }
 
 .signup-btn-primary:hover {
-    box-shadow: 0 16px 34px rgba(232, 93, 59, 0.34);
+    box-shadow: 0 16px 34px var(--auth-primary-shadow-hover);
 }
 
 .signup-btn-facebook {
-    border-color: rgba(60, 84, 240, 0.35);
-    background: rgba(60, 84, 240, 0.12);
-    color: #1b2b84;
-    box-shadow: 0 10px 24px rgba(40, 60, 140, 0.14);
+    border-color: var(--auth-social-border);
+    background: var(--auth-social-bg);
+    color: var(--auth-social-text);
+    box-shadow: 0 10px 24px var(--auth-social-shadow);
 }
 
 .signup-btn-facebook:hover {
-    background: rgba(60, 84, 240, 0.2);
+    background: var(--auth-social-bg-hover);
 }
 
 html.dark .signup-btn-facebook {
-    border-color: rgba(255, 255, 255, 0.25);
-    background: rgba(60, 84, 240, 0.2);
-    color: #fff;
-    box-shadow: 0 10px 24px rgba(40, 60, 140, 0.22);
+    border-color: var(--auth-social-border);
+    background: var(--auth-social-bg);
+    color: var(--auth-social-text);
+    box-shadow: 0 10px 24px var(--auth-social-shadow);
 }
 
 html.dark .signup-btn-facebook:hover {
-    background: rgba(60, 84, 240, 0.3);
+    background: var(--auth-social-bg-hover);
 }
 
 .signup-links-row {
@@ -259,7 +259,7 @@ html.dark .signup-btn-facebook:hover {
 .signup-role-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(8, 12, 24, 0.55);
+    background: var(--auth-modal-overlay);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -273,7 +273,7 @@ html.dark .signup-btn-facebook:hover {
     border-radius: 20px;
     border: 1px solid var(--panel-border);
     background: var(--panel-bg);
-    box-shadow: 0 24px 46px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 24px 46px var(--auth-modal-shadow);
     padding: 1.25rem;
 }
 

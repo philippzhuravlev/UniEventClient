@@ -39,7 +39,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(60, 84, 240, 0.14);
+    background: var(--editor-step-icon-bg);
     color: var(--text-primary);
 }
 

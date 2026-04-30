@@ -11,10 +11,10 @@
     width: min(980px, 100%);
     border-radius: 30px;
     border: 1px solid var(--panel-border);
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.96) 0%, rgba(250, 244, 241, 0.95) 52%, rgba(249, 241, 238, 0.97) 100%);
+    background: linear-gradient(160deg, var(--manual-card-bg-start) 0%, var(--manual-card-bg-mid) 52%, var(--manual-card-bg-end) 100%);
     box-shadow:
-        0 28px 54px rgba(58, 34, 27, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+        0 28px 54px var(--editor-card-shadow),
+        inset 0 1px 0 var(--editor-card-inset);
     overflow: hidden;
 }
 
@@ -23,23 +23,23 @@
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 96% 4%, rgba(60, 84, 240, 0.2) 0%, transparent 40%),
-        radial-gradient(circle at 8% 0%, rgba(232, 93, 59, 0.14) 0%, transparent 38%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 38%);
+        radial-gradient(circle at 96% 4%, var(--editor-glow-blue-light) 0%, transparent 40%),
+        radial-gradient(circle at 8% 0%, var(--editor-glow-accent-light) 0%, transparent 38%),
+        linear-gradient(180deg, var(--editor-glow-white-light), transparent 38%);
 }
 
 html.dark .manual-event-card {
-    background: linear-gradient(160deg, rgba(15, 19, 46, 0.9) 0%, rgba(12, 15, 36, 0.92) 48%, rgba(8, 10, 28, 0.94) 100%);
+    background: linear-gradient(160deg, var(--manual-card-bg-start) 0%, var(--manual-card-bg-mid) 48%, var(--manual-card-bg-end) 100%);
     box-shadow:
-        0 26px 52px rgba(0, 0, 0, 0.34),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 26px 52px var(--editor-card-shadow),
+        inset 0 1px 0 var(--editor-card-inset);
 }
 
 html.dark .manual-event-card-glow {
     background:
-        radial-gradient(circle at 96% 4%, rgba(82, 106, 255, 0.28) 0%, transparent 40%),
-        radial-gradient(circle at 8% 0%, rgba(232, 93, 59, 0.2) 0%, transparent 40%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 38%);
+        radial-gradient(circle at 96% 4%, var(--editor-glow-blue-light) 0%, transparent 40%),
+        radial-gradient(circle at 8% 0%, var(--editor-glow-accent-light) 0%, transparent 40%),
+        linear-gradient(180deg, var(--editor-glow-white-light), transparent 38%);
 }
 
 .manual-event-card-content {
@@ -86,7 +86,7 @@ html.dark .manual-event-card-glow {
     gap: 0.4rem;
     border-radius: 999px;
     border: 1px solid var(--panel-border);
-    background: rgba(232, 93, 59, 0.13);
+    background: var(--manual-badge-bg);
     color: var(--text-primary);
     padding: 0.45rem 0.85rem;
     font-size: 0.78rem;
@@ -108,14 +108,14 @@ html.dark .manual-event-card-glow {
 }
 
 .manual-event-feedback-error {
-    border-color: rgba(190, 42, 42, 0.35);
-    background: rgba(190, 42, 42, 0.1);
+    border-color: var(--status-error-border);
+    background: var(--status-error-bg);
     color: var(--status-error);
 }
 
 .manual-event-feedback-success {
-    border-color: rgba(40, 138, 80, 0.35);
-    background: rgba(40, 138, 80, 0.1);
+    border-color: var(--status-success-border);
+    background: var(--status-success-bg);
     color: var(--status-success);
 }
 
@@ -188,7 +188,7 @@ html.dark .manual-event-feedback-success {
 
 .manual-event-input:focus {
     border-color: var(--input-focus-border);
-    box-shadow: 0 0 0 3px rgba(60, 84, 240, 0.2);
+    box-shadow: 0 0 0 3px var(--focus-ring-soft);
     transform: translateY(-1px);
 }
 
@@ -230,20 +230,20 @@ html.dark .manual-event-feedback-success {
 
 .manual-event-btn-primary {
     background: linear-gradient(135deg, var(--dtu-accent) 0%, var(--dtu-accent-hover) 100%);
-    color: #fff;
-    box-shadow: 0 12px 30px rgba(232, 93, 59, 0.26);
+    color: var(--text-on-accent);
+    box-shadow: 0 12px 30px var(--editor-primary-shadow);
 }
 
 .manual-event-btn-secondary {
-    background: rgba(60, 84, 240, 0.14);
-    border-color: rgba(60, 84, 240, 0.3);
-    color: #1b2b84;
+    background: var(--manual-secondary-bg);
+    border-color: var(--manual-secondary-border);
+    color: var(--manual-secondary-text);
 }
 
 html.dark .manual-event-btn-secondary {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.24);
-    background: rgba(60, 84, 240, 0.22);
+    color: var(--manual-secondary-text);
+    border-color: var(--manual-secondary-border);
+    background: var(--manual-secondary-bg);
 }
 
 .manual-event-btn-ghost {

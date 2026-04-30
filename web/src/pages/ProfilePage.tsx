@@ -43,7 +43,7 @@ function SavedEventCard({ event }: { event: EventType }) {
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(20,184,166,0.25))]">
+                    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,var(--profile-fallback-gradient-start),var(--profile-fallback-gradient-end))]">
                         <CalendarDays size={26} className="text-white/80" />
                     </div>
                 )}
@@ -223,7 +223,7 @@ export function ProfilePage() {
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 lg:items-start">
                         <div className="lg:col-span-3">
                             <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-                                <div className="relative flex h-36 w-36 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--dtu-accent-light)] bg-[#0f1020] shadow-[0_0_0_8px_rgba(60,84,240,0.14)]">
+                                <div className="relative flex h-36 w-36 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--dtu-accent-light)] bg-[var(--profile-avatar-bg)] shadow-[0_0_0_8px_var(--profile-avatar-ring)]">
                                     {profileImage ? (
                                         <img src={profileImage} alt={userLabel} className="h-full w-full object-cover" />
                                     ) : (
@@ -237,7 +237,7 @@ export function ProfilePage() {
                                         <span className={`mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] ${accountRole === 'organizer'
                                             ? 'border border-transparent bg-[var(--link-primary)] text-white'
                                             : accountRole === 'admin'
-                                                ? 'border border-transparent bg-emerald-600 text-white'
+                                                ? 'border border-transparent bg-[var(--admin-role-pill-bg)] text-[var(--text-on-accent)]'
                                                 : 'border border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)]'
                                             }`}>
                                             {accountRole === 'organizer' ? 'Organizer' : accountRole === 'admin' ? 'Admin' : 'User'}
@@ -257,7 +257,7 @@ export function ProfilePage() {
                                         {accountRole === 'admin' && (
                                             <Link
                                                 to="/admin/generate-organizer-key"
-                                                className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-emerald-200 transition-colors duration-200 hover:bg-emerald-500/20"
+                                                className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-role-border)] bg-[var(--admin-role-bg)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--admin-role-text)] transition-colors duration-200 hover:bg-[var(--admin-role-bg-hover)]"
                                             >
                                                 Admin: Generate Organizer Key
                                             </Link>

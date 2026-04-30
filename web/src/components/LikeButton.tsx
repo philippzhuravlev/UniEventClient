@@ -80,15 +80,15 @@ export function LikeButton({
         ? 'inline-flex items-center gap-2 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--button-hover)]'
         : 'inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors duration-200';
     const iconOnlyClasses = iconOnly
-        ? 'h-12 w-12 justify-center rounded-xl border p-0 shadow-[0_8px_18px_rgba(16,24,40,0.10)] backdrop-blur-md transition-colors duration-200'
+        ? 'h-12 w-12 justify-center rounded-xl border p-0 shadow-[0_8px_18px_var(--like-button-icon-shadow)] backdrop-blur-md transition-colors duration-200'
         : '';
     const stateClasses = iconOnly
         ? isLiked
-            ? 'border-[color-mix(in_srgb,var(--dtu-accent)_55%,var(--panel-border)_45%)] bg-[rgba(255,255,255,0.18)] text-[var(--dtu-accent)] hover:bg-[rgba(255,255,255,0.26)] dark:bg-[rgba(18,20,36,0.72)] dark:text-[var(--dtu-accent-light)] dark:hover:bg-[rgba(30,63,242,0.16)]'
-            : 'border-[var(--panel-border)] bg-[rgba(255,255,255,0.18)] text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.26)] dark:bg-[rgba(18,20,36,0.72)] dark:text-[var(--text-primary)] dark:hover:bg-[rgba(30,63,242,0.16)]'
+            ? 'border-[color-mix(in_srgb,var(--dtu-accent)_55%,var(--panel-border)_45%)] bg-[var(--like-button-bg-light)] text-[var(--dtu-accent)] hover:bg-[var(--like-button-bg-light-hover)] dark:bg-[var(--like-button-bg-dark)] dark:text-[var(--dtu-accent-light)] dark:hover:bg-[var(--like-button-bg-dark-hover)]'
+            : 'border-[var(--panel-border)] bg-[var(--like-button-bg-light)] text-[var(--text-primary)] hover:bg-[var(--like-button-bg-light-hover)] dark:bg-[var(--like-button-bg-dark)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--like-button-bg-dark-hover)]'
         : isLiked
             ? 'border-[color-mix(in_srgb,var(--dtu-accent)_55%,var(--panel-border)_45%)] bg-[color-mix(in_srgb,var(--dtu-accent)_16%,var(--panel-bg)_84%)] text-[var(--dtu-accent)] hover:bg-[color-mix(in_srgb,var(--dtu-accent)_22%,var(--panel-bg)_78%)] dark:text-[var(--dtu-accent-light)]'
-            : 'border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)] hover:bg-[var(--button-hover)] dark:text-[var(--text-primary)] dark:hover:bg-[rgba(30,63,242,0.16)]';
+            : 'border-[var(--panel-border)] bg-[var(--panel-bg)] text-[var(--text-primary)] hover:bg-[var(--button-hover)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--like-button-bg-dark-hover)]';
     const rootClasses = stateClasses;
 
     return (
@@ -103,7 +103,7 @@ export function LikeButton({
             <Heart
                 size={iconOnly ? 24 : 18}
                 strokeWidth={iconOnly ? 2.6 : 2.2}
-                className={isLiked ? 'text-red-500' : undefined}
+                className={isLiked ? 'text-[var(--like-icon-active)]' : undefined}
                 fill={isLiked ? 'currentColor' : 'none'}
             />
             {!iconOnly && label}
